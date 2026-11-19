@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>今日待办 · Material 3 原型</title>
+<title>ToDo · 待办清单</title>
+<link rel="icon" href='data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"%3E%3Cdefs%3E%3ClinearGradient id="g" x1="0" y1="0" x2="1" y2="1"%3E%3Cstop offset="0" stop-color="%236750A4"/%3E%3Cstop offset="1" stop-color="%239280C9"/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width="64" height="64" rx="14" fill="url(%23g)"/%3E%3Ctext x="32" y="41" font-family="Arial,Helvetica,sans-serif" font-size="23" font-weight="700" fill="white" text-anchor="middle"%3EToDo%3C/text%3E%3C/svg%3E'>
 <style>
 /* =====================================================================
    画布：375 × 812，全部为固定像素，不做响应式缩放
@@ -251,7 +252,7 @@ button { font-family: inherit; border: 0; background: none; color: inherit; curs
   font-weight: 500;
   color: var(--on-surface-variant);
 }
-.sec-count { font-weight: 400; }
+.sec-count { font-weight: 400; margin-left: 6px; }
 
 /* ---------- 待办条目：min-height 72 / 圆角 12 ---------- */
 .todo {
@@ -334,8 +335,7 @@ button { font-family: inherit; border: 0; background: none; color: inherit; curs
   font-size: 12px;
   line-height: 16px;
   color: var(--on-surface-variant);
-  white-space: nowrap;
-  overflow: hidden;
+  flex-wrap: wrap;
 }
 
 .todo-sub .sep {
@@ -483,6 +483,71 @@ button { font-family: inherit; border: 0; background: none; color: inherit; curs
 .nav-item.active .nav-ind { background: var(--secondary-container); }
 .nav-item.active .nav-ind .i { color: var(--on-secondary-container); }
 .nav-item.active .nav-label { color: var(--on-surface); }
+
+/* ---------- 左滑快捷操作：编辑 / 标记完成 / 删除 ---------- */
+.swipe-wrap {
+  position: relative;
+  margin: 4px 16px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.swipe-wrap .todo { margin: 0; }
+
+.swipe-actions {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: flex-end;
+  align-items: stretch;
+  pointer-events: none;
+}
+.swipe-wrap.open .swipe-actions { pointer-events: auto; }
+
+.swipe-act {
+  width: 68px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 11px;
+  line-height: 1.2;
+}
+.swipe-act .i { width: 20px; height: 20px; }
+.swipe-edit { background: var(--secondary-container); color: var(--on-secondary-container); }
+.swipe-toggle { background: var(--primary-container); color: var(--on-primary-container); }
+.swipe-del { background: var(--error-container); color: var(--on-error-container); }
+
+.todo.dragging { transition: none; }
+.todo.snap { transition: transform 200ms var(--easing); }
+
+/* 按天排序切换按钮 */
+.sort-btn {
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 14px;
+  background: var(--surface-container);
+  color: var(--on-surface-variant);
+  font-size: 11px;
+  line-height: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+.sort-btn .i { width: 14px; height: 14px; }
+
+/* 自定义分类封面色 */
+.cat-custom { background-image: linear-gradient(135deg, #7D5260, #C8A2B0); }
+
+/* 截止时间：日期 + 时刻并排 */
+.due-row { display: flex; gap: 8px; }
+.due-row .field { flex: 1; min-width: 0; padding: 0 12px; }
+.due-row input[type="date"],
+.due-row input[type="time"] { font-size: 14px; }
+body.dark .due-row input { color-scheme: dark; }
+
+.hint { font-size: 12px; line-height: 16px; color: var(--on-surface-variant); margin-top: 6px; }
 
 /* ---------- Hero 飞行副本 ---------- */
 .flight {
@@ -1299,6 +1364,7 @@ body.dark .overview .progress { background: rgba(234, 221, 255, 0.12); }
   <symbol id="i-delete" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></symbol>
   <symbol id="i-close" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></symbol>
   <symbol id="i-undo" viewBox="0 0 24 24"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></symbol>
+  <symbol id="i-sort" viewBox="0 0 24 24"><path d="M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z"/></symbol>
   <symbol id="i-chev-left" viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></symbol>
   <symbol id="i-chev-right" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12 8.59 16.59 10 18l6-6z"/></symbol>
 </svg>
@@ -1329,151 +1395,7 @@ body.dark .overview .progress { background: rgba(234, 221, 255, 0.12); }
         </div>
       </div>
 
-      <div class="section-title">今天<span class="sec-count" id="countToday">5</span></div>
-
-      <!-- 待办条目：Hero tag = 各自 data-id -->
-      <div class="todo-group" id="group-today">
-      <div class="todo press" data-id="t1" data-title="提交移动软件动画课程作业"
-           data-time="今天 18:00" data-group="今天" data-cat="学习" data-prio="高"
-           onclick="openTodo(this)">
-        <div class="checkbox" role="checkbox" aria-checked="false"
-             onclick="toggleTodo(event, this.closest('.todo'))">
-          <span class="cb-box"><svg class="i"><use href="#i-check"/></svg></span>
-        </div>
-        <div class="todo-main">
-          <div class="todo-title">提交移动软件动画课程作业</div>
-          <div class="todo-sub"><span>今天 18:00</span><span class="sep"></span><span>学习</span><span class="sep"></span><span class="todo-prio high">高</span></div>
-        </div>
-        <div class="thumb cat-study"><svg class="i"><use href="#i-book"/></svg></div>
-        <button class="menu-btn press" aria-label="更多" onclick="openRowMenu(event, this)">
-          <svg class="i"><use href="#i-more"/></svg>
-        </button>
-      </div>
-
-      <div class="todo press" data-id="t2" data-title="整理 Flutter 动画笔记"
-           data-time="今天 20:00" data-group="今天" data-cat="学习" data-prio="中"
-           onclick="openTodo(this)">
-        <div class="checkbox" role="checkbox" aria-checked="false"
-             onclick="toggleTodo(event, this.closest('.todo'))">
-          <span class="cb-box"><svg class="i"><use href="#i-check"/></svg></span>
-        </div>
-        <div class="todo-main">
-          <div class="todo-title">整理 Flutter 动画笔记</div>
-          <div class="todo-sub"><span>今天 20:00</span><span class="sep"></span><span>学习</span><span class="sep"></span><span class="todo-prio">中</span></div>
-        </div>
-        <div class="thumb cat-study"><svg class="i"><use href="#i-book"/></svg></div>
-        <button class="menu-btn press" aria-label="更多" onclick="openRowMenu(event, this)">
-          <svg class="i"><use href="#i-more"/></svg>
-        </button>
-      </div>
-
-      <div class="todo press done" data-id="t3" data-title="给室友带一杯咖啡"
-           data-time="今天 09:30" data-group="今天" data-cat="生活" data-prio="低"
-           onclick="openTodo(this)">
-        <div class="checkbox" role="checkbox" aria-checked="true"
-             onclick="toggleTodo(event, this.closest('.todo'))">
-          <span class="cb-box"><svg class="i"><use href="#i-check"/></svg></span>
-        </div>
-        <div class="todo-main">
-          <div class="todo-title">给室友带一杯咖啡</div>
-          <div class="todo-sub"><span>今天 09:30</span><span class="sep"></span><span>生活</span><span class="sep"></span><span class="todo-prio">低</span></div>
-        </div>
-        <div class="thumb cat-life"><svg class="i"><use href="#i-home"/></svg></div>
-        <button class="menu-btn press" aria-label="更多" onclick="openRowMenu(event, this)">
-          <svg class="i"><use href="#i-more"/></svg>
-        </button>
-      </div>
-
-      <div class="todo press" data-id="t4" data-title="预约图书馆自习座位"
-           data-time="今天 21:00" data-group="今天" data-cat="生活" data-prio="中"
-           onclick="openTodo(this)">
-        <div class="checkbox" role="checkbox" aria-checked="false"
-             onclick="toggleTodo(event, this.closest('.todo'))">
-          <span class="cb-box"><svg class="i"><use href="#i-check"/></svg></span>
-        </div>
-        <div class="todo-main">
-          <div class="todo-title">预约图书馆自习座位</div>
-          <div class="todo-sub"><span>今天 21:00</span><span class="sep"></span><span>生活</span><span class="sep"></span><span class="todo-prio">中</span></div>
-        </div>
-        <div class="thumb cat-life"><svg class="i"><use href="#i-home"/></svg></div>
-        <button class="menu-btn press" aria-label="更多" onclick="openRowMenu(event, this)">
-          <svg class="i"><use href="#i-more"/></svg>
-        </button>
-      </div>
-
-      <div class="todo press" data-id="t5" data-title="完成 Hero 转场练习 Demo"
-           data-time="今天 22:00" data-group="今天" data-cat="学习" data-prio="高"
-           onclick="openTodo(this)">
-        <div class="checkbox" role="checkbox" aria-checked="false"
-             onclick="toggleTodo(event, this.closest('.todo'))">
-          <span class="cb-box"><svg class="i"><use href="#i-check"/></svg></span>
-        </div>
-        <div class="todo-main">
-          <div class="todo-title">完成 Hero 转场练习 Demo</div>
-          <div class="todo-sub"><span>今天 22:00</span><span class="sep"></span><span>学习</span><span class="sep"></span><span class="todo-prio high">高</span></div>
-        </div>
-        <div class="thumb cat-study"><svg class="i"><use href="#i-book"/></svg></div>
-        <button class="menu-btn press" aria-label="更多" onclick="openRowMenu(event, this)">
-          <svg class="i"><use href="#i-more"/></svg>
-        </button>
-      </div>
-
-      </div>
-
-      <div class="section-title">明天<span class="sec-count" id="countTomorrow">3</span></div>
-
-      <div class="todo-group" id="group-tomorrow">
-      <div class="todo press" data-id="t6" data-title="复习 AnimationController 生命周期"
-           data-time="明天 10:00" data-group="明天" data-cat="学习" data-prio="中"
-           onclick="openTodo(this)">
-        <div class="checkbox" role="checkbox" aria-checked="false"
-             onclick="toggleTodo(event, this.closest('.todo'))">
-          <span class="cb-box"><svg class="i"><use href="#i-check"/></svg></span>
-        </div>
-        <div class="todo-main">
-          <div class="todo-title">复习 AnimationController 生命周期</div>
-          <div class="todo-sub"><span>明天 10:00</span><span class="sep"></span><span>学习</span><span class="sep"></span><span class="todo-prio">中</span></div>
-        </div>
-        <div class="thumb cat-study"><svg class="i"><use href="#i-book"/></svg></div>
-        <button class="menu-btn press" aria-label="更多" onclick="openRowMenu(event, this)">
-          <svg class="i"><use href="#i-more"/></svg>
-        </button>
-      </div>
-
-      <div class="todo press" data-id="t7" data-title="交电费"
-           data-time="明天 12:00" data-group="明天" data-cat="生活" data-prio="低"
-           onclick="openTodo(this)">
-        <div class="checkbox" role="checkbox" aria-checked="false"
-             onclick="toggleTodo(event, this.closest('.todo'))">
-          <span class="cb-box"><svg class="i"><use href="#i-check"/></svg></span>
-        </div>
-        <div class="todo-main">
-          <div class="todo-title">交电费</div>
-          <div class="todo-sub"><span>明天 12:00</span><span class="sep"></span><span>生活</span><span class="sep"></span><span class="todo-prio">低</span></div>
-        </div>
-        <div class="thumb cat-life"><svg class="i"><use href="#i-home"/></svg></div>
-        <button class="menu-btn press" aria-label="更多" onclick="openRowMenu(event, this)">
-          <svg class="i"><use href="#i-more"/></svg>
-        </button>
-      </div>
-
-      <div class="todo press" data-id="t8" data-title="小组周会 · 进度对齐"
-           data-time="明天 15:00" data-group="明天" data-cat="工作" data-prio="高"
-           onclick="openTodo(this)">
-        <div class="checkbox" role="checkbox" aria-checked="false"
-             onclick="toggleTodo(event, this.closest('.todo'))">
-          <span class="cb-box"><svg class="i"><use href="#i-check"/></svg></span>
-        </div>
-        <div class="todo-main">
-          <div class="todo-title">小组周会 · 进度对齐</div>
-          <div class="todo-sub"><span>明天 15:00</span><span class="sep"></span><span>工作</span><span class="sep"></span><span class="todo-prio high">高</span></div>
-        </div>
-        <div class="thumb cat-work"><svg class="i"><use href="#i-briefcase"/></svg></div>
-        <button class="menu-btn press" aria-label="更多" onclick="openRowMenu(event, this)">
-          <svg class="i"><use href="#i-more"/></svg>
-        </button>
-      </div>
-      </div>
+      <div id="homeGroups"></div>
 
     </div>
 
@@ -1657,7 +1579,7 @@ body.dark .overview .progress { background: rgba(234, 221, 255, 0.12); }
         </div>
       </div>
 
-      <div class="ver">版本 1.0.0</div>
+      <div class="ver">版本 1.1.0</div>
     </div>
 
     <div class="navbar">
@@ -1692,18 +1614,25 @@ body.dark .overview .progress { background: rgba(234, 221, 255, 0.12); }
       </div>
 
       <div class="field-block">
-        <label class="field-label" for="fTime">时间</label>
-        <div class="field"><input id="fTime" type="text" placeholder="今天 18:00"></div>
+        <div class="field-label">截止时间</div>
+        <div class="due-row">
+          <div class="field"><input id="fDate" type="date" aria-label="截止日期"></div>
+          <div class="field"><input id="fClock" type="time" aria-label="截止时刻"></div>
+        </div>
+        <div class="hint">可选择今天或之后的任意日期与时刻</div>
       </div>
 
       <div class="field-block">
         <div class="field-label">分组</div>
         <div class="choice-row" id="fGroup">
-          <button class="choice selected press" data-value="今天">
+          <button class="choice selected press" data-value="今天" onclick="selectDueGroup('今天')">
             <svg class="i"><use href="#i-check"/></svg>今天
           </button>
-          <button class="choice press" data-value="明天">
+          <button class="choice press" data-value="明天" onclick="selectDueGroup('明天')">
             <svg class="i"><use href="#i-check"/></svg>明天
+          </button>
+          <button class="choice press" data-value="其他" onclick="selectDueGroup('其他')">
+            <svg class="i"><use href="#i-check"/></svg>其他
           </button>
         </div>
       </div>
@@ -1720,20 +1649,26 @@ body.dark .overview .progress { background: rgba(234, 221, 255, 0.12); }
           <button class="choice press" data-value="工作">
             <svg class="i"><use href="#i-check"/></svg>工作
           </button>
+          <button class="choice press" data-value="__custom" onclick="addCustomCategory(event)">
+            <svg class="i"><use href="#i-add"/></svg>自定义
+          </button>
         </div>
       </div>
 
       <div class="field-block">
         <div class="field-label">优先级</div>
         <div class="choice-row" id="fPrio">
-          <button class="choice press" data-value="低">
-            <svg class="i"><use href="#i-check"/></svg>低
+          <button class="choice press" data-value="重要且紧急">
+            <svg class="i"><use href="#i-check"/></svg>重要且紧急
           </button>
-          <button class="choice selected press" data-value="中">
-            <svg class="i"><use href="#i-check"/></svg>中
+          <button class="choice selected press" data-value="重要但不紧急">
+            <svg class="i"><use href="#i-check"/></svg>重要但不紧急
           </button>
-          <button class="choice press" data-value="高">
-            <svg class="i"><use href="#i-check"/></svg>高
+          <button class="choice press" data-value="紧急但不重要">
+            <svg class="i"><use href="#i-check"/></svg>紧急但不重要
+          </button>
+          <button class="choice press" data-value="既不重要也不紧急">
+            <svg class="i"><use href="#i-check"/></svg>既不重要也不紧急
           </button>
         </div>
       </div>
@@ -1853,11 +1788,11 @@ var editorTitle = document.getElementById('editorTitle');
 var editorDeleteWrap = document.getElementById('editorDeleteWrap');
 var blockTitle = document.getElementById('blockTitle');
 var fTitle = document.getElementById('fTitle');
-var fTime = document.getElementById('fTime');
+var fDate = document.getElementById('fDate');
+var fClock = document.getElementById('fClock');
 var fNote = document.getElementById('fNote');
 var popupMenu = document.getElementById('popupMenu');
-var groupToday = document.getElementById('group-today');
-var groupTomorrow = document.getElementById('group-tomorrow');
+var homeGroups = document.getElementById('homeGroups');
 
 var detailCreated = document.getElementById('detailCreated');
 
@@ -1894,22 +1829,32 @@ var menuContext = null;
 var darkMode = false;
 var notifyEnabled = false;
 var defaultGroup = '今天';
+var sortModes = {};      /* 每天独立排序：key = yyyy-m-d，值 = 'time' | 'priority' */
+var customCats = [];     /* 自定义分类，仅保存在本次会话 */
+var editorDue = null;    /* 编辑器当前的截止时间 */
 var calRef = new Date();
 var calSelected = new Date();
 var statsFilter = 'all';
 var dialogMode = null;
 var dialogGroup = '今天';
 
-/* ---------- Hero 分类映射 ---------- */
+/* ---------- 四象限优先级 ---------- */
+var PRIO = ['重要且紧急', '重要但不紧急', '紧急但不重要', '既不重要也不紧急'];
+var PRIO_RANK = {};
+PRIO.forEach(function (p, i) { PRIO_RANK[p] = i; });
+function prioRank(p) { return PRIO_RANK[p] != null ? PRIO_RANK[p] : 3; }
+
+/* ---------- 分类：默认三类 + 自定义 ---------- */
 var CAT = {
   '学习': { cls: 'cat-study', icon: '#i-book' },
   '生活': { cls: 'cat-life', icon: '#i-home' },
   '工作': { cls: 'cat-work', icon: '#i-briefcase' }
 };
+function catConf(cat) { return CAT[cat] || { cls: 'cat-custom', icon: '#i-tag' }; }
 
-/* ---------- 首页两组待办（新增的日历 / 明细行不计入统计） ---------- */
+/* ---------- 首页待办（日历 / 明细行不计入统计） ---------- */
 function allTodos() {
-  return document.querySelectorAll('#group-today .todo, #group-tomorrow .todo');
+  return document.querySelectorAll('#homeGroups .todo');
 }
 
 function pad2(n) { return n < 10 ? '0' + n : '' + n; }
@@ -1927,6 +1872,161 @@ function fmtDay(d) {
 
 function sameDay(a, b) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+}
+
+/* ---------- 截止时间：日期 + 时刻 ---------- */
+function startOfDay(d) {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function dateKey(d) {
+  return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+}
+
+/* 解析 yyyy-mm-dd / HH:mm，避免浏览器把纯日期当 UTC */
+function parseDue(s) {
+  var parts = String(s || '').split('T');
+  var dp = (parts[0] || '').split('-');
+  var tp = (parts[1] || '18:00').split(':');
+  return new Date(Number(dp[0]), Number(dp[1]) - 1, Number(dp[2]),
+                  Number(tp[0] || 18), Number(tp[1] || 0));
+}
+
+function dueOf(item) { return parseDue(item.dataset.due); }
+
+/* 今天 / 明天 / 其他（由截止时间推导） */
+function groupOf(d) {
+  var diff = Math.round((startOfDay(d) - startOfDay(new Date())) / 86400000);
+  if (diff === 0) return '今天';
+  if (diff === 1) return '明天';
+  return '其他';
+}
+
+/* 列表 / 详情里展示的截止时间文案 */
+function dueText(d) {
+  var g = groupOf(d);
+  var label = (g === '其他') ? fmtDay(d) : g;
+  return label + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+}
+
+/* 日期分区标题 */
+function dayTitle(d) {
+  var g = groupOf(d);
+  return (g === '其他') ? fmtDay(d) : g;
+}
+
+function dateInputValue(d) {
+  return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+}
+
+function timeInputValue(d) {
+  return pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+}
+
+function dueFromInputs() {
+  var ds = fDate.value || dateInputValue(new Date());
+  var ts = fClock.value || '18:00';
+  var dp = ds.split('-');
+  var tp = ts.split(':');
+  return new Date(Number(dp[0]), Number(dp[1]) - 1, Number(dp[2]),
+                  Number(tp[0]), Number(tp[1]));
+}
+
+/* ---------- 首页：按日期分区 + 每天独立排序 ---------- */
+function sortModeFor(day) {
+  return sortModes[dateKey(day)] || 'priority';
+}
+
+function sortItems(items, mode) {
+  return items.slice().sort(function (a, b) {
+    if (mode === 'priority') {
+      var r = prioRank(a.dataset.prio) - prioRank(b.dataset.prio);
+      if (r !== 0) return r;
+    }
+    return dueOf(a) - dueOf(b);
+  });
+}
+
+function toggleDaySort(day, ev) {
+  if (ev) ev.stopPropagation();
+  var key = dateKey(day);
+  sortModes[key] = (sortModeFor(day) === 'priority') ? 'time' : 'priority';
+  renderHome();
+}
+
+function resetSwipes() {
+  Array.prototype.forEach.call(document.querySelectorAll('.swipe-wrap'), function (w) {
+    w.classList.remove('open');
+    var card = w.querySelector('.todo');
+    if (card) {
+      card.classList.remove('snap', 'dragging');
+      card.style.transform = '';
+      card._offset = 0;
+    }
+  });
+}
+
+function renderHome() {
+  /* 先快照卡片，再清空容器，避免清空后查不到数据 */
+  var cards = Array.prototype.slice.call(allTodos());
+  var dayMap = {};
+  cards.forEach(function (t) {
+    var d = startOfDay(dueOf(t));
+    dayMap[dateKey(d)] = d;
+  });
+  var days = Object.keys(dayMap).sort().map(function (k) { return dayMap[k]; });
+
+  var sections = days.map(function (day) {
+    var items = sortItems(cards.filter(function (t) {
+      return sameDay(dueOf(t), day);
+    }), sortModeFor(day));
+    return { day: day, items: items, mode: sortModeFor(day) };
+  });
+
+  homeGroups.innerHTML = '';
+
+  if (!sections.length) {
+    homeGroups.innerHTML = '<div class="empty">暂无待办</div>';
+    updateOverview();
+    return;
+  }
+
+  sections.forEach(function (sec) {
+    var head = document.createElement('div');
+    head.className = 'section-title';
+    head.innerHTML = '<span>' + dayTitle(sec.day) +
+      '<span class="sec-count">' + sec.items.length + '</span></span>';
+    var btn = document.createElement('button');
+    btn.className = 'sort-btn press';
+    btn.setAttribute('aria-label', '切换排序方式');
+    btn.innerHTML = '<svg class="i"><use href="#i-sort"/></svg>' +
+      '<span>' + (sec.mode === 'priority' ? '按优先级' : '按时间') + '</span>';
+    btn.addEventListener('click', function (ev) { toggleDaySort(sec.day, ev); });
+    bindPress(btn);
+    head.appendChild(btn);
+    homeGroups.appendChild(head);
+
+    var group = document.createElement('div');
+    group.className = 'todo-group';
+    sec.items.forEach(function (item) {
+      var wrap = item.closest('.swipe-wrap') || item;
+      resetCard(item);
+      group.appendChild(wrap);
+    });
+    homeGroups.appendChild(group);
+  });
+
+  updateOverview();
+}
+
+function resetCard(item) {
+  var wrap = item.closest('.swipe-wrap');
+  if (!wrap) return;
+  wrap.classList.remove('open');
+  item.classList.remove('snap', 'dragging');
+  item.style.transform = '';
+  item._offset = 0;
+  item._swiped = false;
 }
 
 function createdOn(day) {
@@ -2029,14 +2129,15 @@ function toggleTodo(e, item) {
 /* ---------- 详情数据填充 ---------- */
 function fillDetail(item) {
   var cat = item.dataset.cat;
-  var conf = CAT[cat] || CAT['学习'];
+  var conf = catConf(cat);
+  var due = dueOf(item);
 
   detailTitle.textContent = item.dataset.title;
-  detailTime.textContent = item.dataset.time;
-  detailGroup.textContent = item.dataset.group;
+  detailTime.textContent = dueText(due);
+  detailGroup.textContent = groupOf(due);
   detailCat.textContent = cat;
-  detailPrio.textContent = item.dataset.prio + '优先级';
-  detailPrio.classList.toggle('high', item.dataset.prio === '高');
+  detailPrio.textContent = item.dataset.prio;
+  detailPrio.classList.toggle('high', item.dataset.prio === '重要且紧急');
   detailHero.className = 'hero-art ' + conf.cls;
   detailHeroIcon.setAttribute('href', conf.icon);
   detailNote.textContent = item.dataset.note || '暂无备注';
@@ -2209,11 +2310,7 @@ function setItemDone(item, done) {
   item.querySelector('.checkbox').setAttribute('aria-checked', done ? 'true' : 'false');
 }
 
-/* ---------- 分组计数同步 ---------- */
-function updateGroupCounts() {
-  document.getElementById('countToday').textContent = groupToday.querySelectorAll('.todo').length;
-  document.getElementById('countTomorrow').textContent = groupTomorrow.querySelectorAll('.todo').length;
-}
+/* ---------- 分组计数由首页分区标题直接渲染 ---------- */
 
 /* ---------- 三点菜单（PopupMenu） ---------- */
 function openRowMenu(e, btn) {
@@ -2309,6 +2406,79 @@ function choiceValue(rowId) {
   return sel ? sel.dataset.value : '';
 }
 
+/* 默认截止时间：今天 / 明天 / 其他（后天）的 18:00 */
+function defaultDueFor(group) {
+  var now = new Date();
+  var off = group === '明天' ? 1 : (group === '其他' ? 2 : 0);
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate() + off, 18, 0);
+}
+
+function syncDueInputs(due) {
+  editorDue = due;
+  fDate.value = dateInputValue(due);
+  fDate.min = dateInputValue(new Date());
+  fClock.value = timeInputValue(due);
+  selectChoice('fGroup', groupOf(due));
+}
+
+/* 分组 chip：今天 / 明天 直接改日期；其他 保留并允许自由选择 */
+function selectDueGroup(group) {
+  var base = startOfDay(new Date());
+  var d = editorDue || defaultDueFor('今天');
+  var h = d.getHours();
+  var mi = d.getMinutes();
+
+  if (group === '今天') {
+    editorDue = new Date(base.getFullYear(), base.getMonth(), base.getDate(), h, mi);
+  } else if (group === '明天') {
+    editorDue = new Date(base.getFullYear(), base.getMonth(), base.getDate() + 1, h, mi);
+  } else {
+    var cur = startOfDay(editorDue);
+    var diff = Math.round((cur - base) / 86400000);
+    if (diff <= 1) {
+      editorDue = new Date(base.getFullYear(), base.getMonth(), base.getDate() + 2, h, mi);
+    } else {
+      editorDue = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate(), h, mi);
+    }
+    setTimeout(function () { fDate.focus(); }, 0);
+  }
+  syncDueInputs(editorDue);
+}
+
+fDate.addEventListener('change', function () {
+  if (!fDate.value) return;
+  editorDue = dueFromInputs();
+  selectChoice('fGroup', groupOf(editorDue));
+});
+fClock.addEventListener('change', function () {
+  editorDue = dueFromInputs();
+});
+
+/* 分类 chips：默认三类 + 已保存的自定义 */
+function renderCatChoices(selected) {
+  var row = document.getElementById('fCat');
+  row.innerHTML = '';
+  ['学习', '生活', '工作'].concat(customCats).forEach(function (name) {
+    var b = document.createElement('button');
+    b.className = 'choice press';
+    b.dataset.value = name;
+    b.innerHTML = '<svg class="i"><use href="#i-check"/></svg>' + escapeHtml(name);
+    bindPress(b);
+    row.appendChild(b);
+  });
+  var add = document.createElement('button');
+  add.className = 'choice press';
+  add.dataset.value = '__custom';
+  add.innerHTML = '<svg class="i"><use href="#i-add"/></svg>自定义';
+  add.addEventListener('click', function (e) {
+    e.stopPropagation();
+    openDialog('category');
+  });
+  bindPress(add);
+  row.appendChild(add);
+  selectChoice('fCat', selected);
+}
+
 function openCreate() {
   closeMenu();
   editorMode = 'create';
@@ -2319,12 +2489,12 @@ function openCreate() {
   editorTitle.textContent = '新建待办';
   editorDeleteWrap.style.display = 'none';
   fTitle.value = '';
-  fTime.value = '';
   fNote.value = '';
-  selectChoice('fGroup', defaultGroup);
-  selectChoice('fCat', '学习');
-  selectChoice('fPrio', '中');
   blockTitle.classList.remove('has-error');
+
+  syncDueInputs(defaultDueFor(defaultGroup));
+  renderCatChoices('学习');
+  selectChoice('fPrio', '重要但不紧急');
 
   editorPage.classList.remove('exit', 'enter');
   editorPage.classList.add('active', 'enter');
@@ -2342,12 +2512,12 @@ function openEditor(item) {
   editorTitle.textContent = '编辑待办';
   editorDeleteWrap.style.display = 'block';
   fTitle.value = item.dataset.title;
-  fTime.value = item.dataset.time;
   fNote.value = item.dataset.note || '';
-  selectChoice('fGroup', item.dataset.group);
-  selectChoice('fCat', item.dataset.cat);
-  selectChoice('fPrio', item.dataset.prio);
   blockTitle.classList.remove('has-error');
+
+  syncDueInputs(dueOf(item));
+  renderCatChoices(item.dataset.cat);
+  selectChoice('fPrio', item.dataset.prio);
 
   editorPage.classList.remove('exit', 'enter');
   editorPage.classList.add('active', 'enter');
@@ -2379,27 +2549,31 @@ function saveEditor() {
     return;
   }
 
+  var due = dueFromInputs();
+  if (startOfDay(due) < startOfDay(new Date())) {
+    showNotification('时间不合法', '截止时间不能早于今天');
+    return;
+  }
+
   var data = {
     title: title,
-    time: fTime.value.trim() || (choiceValue('fGroup') === '明天' ? '明天 12:00' : '今天 18:00'),
-    group: choiceValue('fGroup'),
+    due: dateInputValue(due) + 'T' + timeInputValue(due),
     cat: choiceValue('fCat'),
-    prio: choiceValue('fPrio'),
+    prio: choiceValue('fPrio') || '重要但不紧急',
     note: fNote.value.trim()
   };
 
   if (editorMode === 'create') {
-    var el = buildTodo(data);
+    var wrap = buildTodo(data);
+    var el = wrap.querySelector('.todo');
     el.dataset.created = new Date().toISOString();
-    (data.group === '明天' ? groupTomorrow : groupToday).appendChild(el);
-    bindTodoEvents(el);
+    homeGroups.appendChild(wrap);
+    renderHome();
     if (notifyEnabled) showNotification('已添加待办', data.title);
   } else if (editingItem) {
     applyTodoData(editingItem, data);
   }
 
-  updateOverview();
-  updateGroupCounts();
   refreshAuxLists();
 
   if (editingItem && currentDetailItem === editingItem && detailPage.classList.contains('active')) {
@@ -2426,56 +2600,68 @@ function deleteTodo(item, fromDetail) {
     openedThumb = null;
     currentDetailItem = null;
   }
-  item.remove();
-  updateOverview();
-  updateGroupCounts();
+  var wrap = item.closest('.swipe-wrap');
+  if (wrap) wrap.remove(); else item.remove();
+  renderHome();
   refreshAuxLists();
 }
 
 /* ---------- 条目构建与数据回写 ---------- */
 function buildTodo(data) {
-  var conf = CAT[data.cat] || CAT['学习'];
-  var el = document.createElement('div');
-  el.className = 'todo press';
+  var conf = catConf(data.cat);
+  var wrap = document.createElement('div');
+  wrap.className = 'swipe-wrap';
+  wrap.innerHTML =
+    '<div class="swipe-actions">' +
+      '<button class="swipe-act swipe-edit" aria-label="编辑">' +
+        '<svg class="i"><use href="#i-edit"/></svg>编辑</button>' +
+      '<button class="swipe-act swipe-toggle" aria-label="标记完成">' +
+        '<svg class="i"><use href="#i-check"/></svg>完成</button>' +
+      '<button class="swipe-act swipe-del" aria-label="删除">' +
+        '<svg class="i"><use href="#i-delete"/></svg>删除</button>' +
+    '</div>' +
+    '<div class="todo press">' +
+      '<div class="checkbox" role="checkbox" aria-checked="false">' +
+        '<span class="cb-box"><svg class="i"><use href="#i-check"/></svg></span>' +
+      '</div>' +
+      '<div class="todo-main">' +
+        '<div class="todo-title"></div>' +
+        '<div class="todo-sub">' +
+          '<span class="todo-sub-time"></span><span class="sep"></span>' +
+          '<span class="todo-sub-cat"></span><span class="sep"></span>' +
+          '<span class="todo-prio"></span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="thumb ' + conf.cls + '"><svg class="i"><use href="' + conf.icon + '"/></svg></div>' +
+      '<button class="menu-btn press" aria-label="更多"><svg class="i"><use href="#i-more"/></svg></button>' +
+    '</div>';
+
+  var el = wrap.querySelector('.todo');
   el.dataset.id = 't' + (new Date().getTime() % 100000);
-  el.dataset.group = data.group;
+  el.dataset.due = data.due;
   el.dataset.cat = data.cat;
   el.dataset.prio = data.prio;
 
-  el.innerHTML =
-    '<div class="checkbox" role="checkbox" aria-checked="false">' +
-      '<span class="cb-box"><svg class="i"><use href="#i-check"/></svg></span>' +
-    '</div>' +
-    '<div class="todo-main">' +
-      '<div class="todo-title"></div>' +
-      '<div class="todo-sub">' +
-        '<span class="todo-sub-time"></span><span class="sep"></span>' +
-        '<span class="todo-sub-cat"></span><span class="sep"></span>' +
-        '<span class="todo-prio"></span>' +
-      '</div>' +
-    '</div>' +
-    '<div class="thumb ' + conf.cls + '"><svg class="i"><use href="' + conf.icon + '"/></svg></div>' +
-    '<button class="menu-btn press" aria-label="更多"><svg class="i"><use href="#i-more"/></svg></button>';
-
   fillTodoText(el, data);
-  return el;
+  bindTodoEvents(el);
+  return wrap;
 }
 
 function fillTodoText(el, data) {
   el.dataset.title = data.title;
-  el.dataset.time = data.time;
+  el.dataset.due = data.due;
   el.dataset.note = data.note || '';
   el.querySelector('.todo-title').textContent = data.title;
-  el.querySelector('.todo-sub-time').textContent = data.time;
+  el.querySelector('.todo-sub-time').textContent = dueText(parseDue(data.due));
   el.querySelector('.todo-sub-cat').textContent = data.cat;
   var prio = el.querySelector('.todo-prio');
   prio.textContent = data.prio;
-  prio.classList.toggle('high', data.prio === '高');
+  prio.classList.toggle('high', data.prio === '重要且紧急');
 }
 
 function applyTodoData(item, data) {
-  var conf = CAT[data.cat] || CAT['学习'];
-  item.dataset.group = data.group;
+  var conf = catConf(data.cat);
+  item.dataset.due = data.due;
   item.dataset.cat = data.cat;
   item.dataset.prio = data.prio;
 
@@ -2485,20 +2671,101 @@ function applyTodoData(item, data) {
   thumb.className = 'thumb ' + conf.cls;
   thumb.querySelector('use').setAttribute('href', conf.icon);
 
-  var target = (data.group === '明天') ? groupTomorrow : groupToday;
-  if (item.parentElement !== target) target.appendChild(item);
+  renderHome();
 }
 
 function bindTodoEvents(item) {
-  item.addEventListener('click', function () { openTodo(item); });
+  item.addEventListener('click', function () {
+    if (item._swiped) { item._swiped = false; return; }
+    openTodo(item);
+  });
+
   item.querySelector('.checkbox').addEventListener('click', function (e) {
+    e.stopPropagation();
     toggleTodo(e, item);
   });
+
   var menuBtn = item.querySelector('.menu-btn');
   menuBtn.addEventListener('click', function (e) { openRowMenu(e, menuBtn); });
   bindPress(menuBtn);
   bindPress(item);
+
+  /* 左滑操作 */
+  var wrap = item.closest('.swipe-wrap');
+  wrap.querySelector('.swipe-edit').addEventListener('click', function (e) {
+    e.stopPropagation();
+    resetCard(item);
+    openEditor(item);
+  });
+  wrap.querySelector('.swipe-toggle').addEventListener('click', function (e) {
+    e.stopPropagation();
+    resetCard(item);
+    setItemDone(item, !item.classList.contains('done'));
+    updateOverview();
+  });
+  wrap.querySelector('.swipe-del').addEventListener('click', function (e) {
+    e.stopPropagation();
+    resetCard(item);
+    deleteTodo(item);
+  });
+
+  bindSwipe(item);
 }
+
+/* 左滑露出三个操作按钮，右滑 / 点击其它卡片时复位 */
+function bindSwipe(item) {
+  var wrap = item.closest('.swipe-wrap');
+  var startX = 0, startOff = 0, dragging = false, moved = false;
+  var SPAN = 204;
+
+  item.addEventListener('pointerdown', function (e) {
+    if (e.target.closest('button') || e.target.closest('.checkbox')) return;
+    if ((item._offset || 0) !== 0) {
+      /* 卡片已展开时点击空白处会先收起 */
+      resetSwipes();
+      return;
+    }
+    resetSwipes();
+    resetCard(item);
+    dragging = true;
+    moved = false;
+    item._swiped = false;
+    startX = e.clientX;
+    startOff = item._offset || 0;
+    item.classList.remove('snap');
+    item.classList.add('dragging');
+    if (item.setPointerCapture) {
+      try { item.setPointerCapture(e.pointerId); } catch (_) {}
+    }
+  });
+
+  item.addEventListener('pointermove', function (e) {
+    if (!dragging) return;
+    var dx = e.clientX - startX;
+    if (Math.abs(dx) > 8) moved = true;
+    var off = Math.max(-SPAN, Math.min(0, startOff + dx));
+    item._offset = off;
+    item.style.transform = 'translateX(' + off + 'px)';
+    wrap.classList.toggle('open', off < -20);
+  });
+
+  function end() {
+    if (!dragging) return;
+    dragging = false;
+    item.classList.remove('dragging');
+    item.classList.add('snap');
+    var open = (item._offset || 0) < -SPAN / 2;
+    item._offset = open ? -SPAN : 0;
+    item.style.transform = 'translateX(' + item._offset + 'px)';
+    wrap.classList.toggle('open', open);
+    item._swiped = moved;
+    setTimeout(function () { item.classList.remove('snap'); }, 220);
+  }
+
+  item.addEventListener('pointerup', end);
+  item.addEventListener('pointercancel', end);
+}
+
 
 /* ---------------------------------------------------------
    功能扩展：统计明细 / 日历 / 通知 / 深色模式 / 头像与姓名
@@ -2506,8 +2773,9 @@ function bindTodoEvents(item) {
 
 /* 统一构建一条待办行（日历页与统计明细页共用） */
 function buildItemRow(item, showCreated) {
-  var conf = CAT[item.dataset.cat] || CAT['学习'];
+  var conf = catConf(item.dataset.cat);
   var done = item.classList.contains('done');
+  var due = dueOf(item);
   var row = document.createElement('div');
   row.className = 'todo press' + (showCreated ? ' row-multi' : '') + (done ? ' done' : '');
   row.innerHTML =
@@ -2517,9 +2785,9 @@ function buildItemRow(item, showCreated) {
     '<div class="todo-main">' +
       '<div class="todo-title"></div>' +
       '<div class="todo-sub">' +
-        '<span>' + escapeHtml(item.dataset.time) + '</span><span class="sep"></span>' +
+        '<span>' + escapeHtml(dueText(due)) + '</span><span class="sep"></span>' +
         '<span>' + escapeHtml(item.dataset.cat) + '</span><span class="sep"></span>' +
-        '<span class="todo-prio' + (item.dataset.prio === '高' ? ' high' : '') + '">' + escapeHtml(item.dataset.prio) + '</span>' +
+        '<span class="todo-prio' + (item.dataset.prio === '重要且紧急' ? ' high' : '') + '">' + escapeHtml(item.dataset.prio) + '</span>' +
         (showCreated ? '<span class="sep"></span><span>创建于 ' + fmtDay(new Date(item.dataset.created)) + '</span>' : '') +
       '</div>' +
     '</div>' +
@@ -2706,7 +2974,7 @@ function openDialog(mode) {
     dialogConfirm.textContent = '保存';
     dialogContent.innerHTML = '<div class="field"><input id="dlgName" type="text" maxlength="20" placeholder="请输入姓名"></div>';
     document.getElementById('dlgName').value = userNameEl.textContent;
-  } else {
+  } else if (mode === 'group') {
     dialogGroup = defaultGroup;
     dialogTitle.textContent = '默认分组';
     dialogConfirm.textContent = '确定';
@@ -2714,12 +2982,18 @@ function openDialog(mode) {
       '<button class="dlg-option press" data-group="今天" onclick="selectDialogGroup(\'今天\')">今天' +
         '<svg class="i"><use href="#i-check"/></svg></button>' +
       '<button class="dlg-option press" data-group="明天" onclick="selectDialogGroup(\'明天\')">明天' +
+        '<svg class="i"><use href="#i-check"/></svg></button>' +
+      '<button class="dlg-option press" data-group="其他" onclick="selectDialogGroup(\'其他\')">其他' +
         '<svg class="i"><use href="#i-check"/></svg></button>';
     syncDialogGroup();
+  } else {
+    dialogTitle.textContent = '自定义分类';
+    dialogConfirm.textContent = '添加';
+    dialogContent.innerHTML = '<div class="field"><input id="dlgCat" type="text" maxlength="10" placeholder="如：社团 / 健康"></div>';
   }
   dialogScrim.classList.add('open');
   setTimeout(function () {
-    var inp = document.getElementById('dlgName');
+    var inp = document.getElementById('dlgName') || document.getElementById('dlgCat');
     if (inp) inp.focus();
   }, 60);
 }
@@ -2750,6 +3024,13 @@ function confirmDialog() {
   } else if (dialogMode === 'group') {
     defaultGroup = dialogGroup;
     document.getElementById('defaultGroupValue').textContent = defaultGroup;
+  } else if (dialogMode === 'category') {
+    var name = document.getElementById('dlgCat').value.trim();
+    if (!name) return;
+    if (name !== '学习' && name !== '生活' && name !== '工作' && customCats.indexOf(name) < 0) {
+      customCats.push(name);
+    }
+    renderCatChoices(name);
   }
   closeDialog();
 }
@@ -2766,11 +3047,11 @@ function bindPress(el) {
 
 document.querySelectorAll('.press').forEach(bindPress);
 
-/* 选项 chip 单选 */
+/* 选项 chip 单选（自定义分类按钮不参与选中） */
 document.querySelectorAll('.choice-row').forEach(function (row) {
   row.addEventListener('click', function (e) {
     var c = e.target.closest('.choice');
-    if (!c) return;
+    if (!c || !c.dataset.value || c.dataset.value === '__custom') return;
     row.querySelectorAll('.choice').forEach(function (x) {
       x.classList.toggle('selected', x === c);
     });
@@ -2790,20 +3071,41 @@ document.querySelectorAll('.scroll').forEach(function (s) {
   s.addEventListener('scroll', closeMenu, { passive: true });
 });
 
-/* 初始化：为示例待办补上创建日期（用于日历统计） */
-(function seedCreated() {
-  var today = new Date();
-  var offsets = { t1: 0, t2: 0, t3: 0, t4: 0, t5: 1, t6: 1, t7: 2, t8: 2 };
-  Array.prototype.forEach.call(allTodos(), function (el, idx) {
-    if (el.dataset.created) return;
-    var off = offsets[el.dataset.id] != null ? offsets[el.dataset.id] : idx % 3;
-    var d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - off, 9 + idx % 8, (10 + idx * 7) % 60);
-    el.dataset.created = d.toISOString();
-  });
-})();
+/* 初始化：构建 1.1.0 示例数据（含一个“其他”日期的待办） */
+(function seedTodos() {
+  var base = startOfDay(new Date());
+  var SEED = [
+    { title: '提交移动软件动画课程作业', day: 0, h: 18, m: 0, cat: '学习', prio: '重要且紧急', ago: 0 },
+    { title: '整理 Flutter 动画笔记', day: 0, h: 20, m: 0, cat: '学习', prio: '重要但不紧急', ago: 0 },
+    { title: '给室友带一杯咖啡', day: 0, h: 9, m: 30, cat: '生活', prio: '既不重要也不紧急', ago: 0, done: true },
+    { title: '预约图书馆自习座位', day: 0, h: 21, m: 0, cat: '生活', prio: '重要但不紧急', ago: 0 },
+    { title: '完成 Hero 转场练习 Demo', day: 0, h: 22, m: 0, cat: '学习', prio: '紧急但不重要', ago: 0 },
+    { title: '复习 AnimationController 生命周期', day: 1, h: 10, m: 0, cat: '学习', prio: '重要但不紧急', ago: 1 },
+    { title: '交电费', day: 1, h: 12, m: 0, cat: '生活', prio: '既不重要也不紧急', ago: 1 },
+    { title: '小组周会 · 进度对齐', day: 1, h: 15, m: 0, cat: '工作', prio: '重要且紧急', ago: 2 },
+    { title: '整理下月课程计划', day: 3, h: 10, m: 0, cat: '学习', prio: '紧急但不重要', ago: 2 }
+  ];
 
-updateOverview();
-updateGroupCounts();
+  SEED.forEach(function (s) {
+    var due = new Date(base.getFullYear(), base.getMonth(), base.getDate() + s.day, s.h, s.m);
+    var wrap = buildTodo({
+      title: s.title,
+      due: dateInputValue(due) + 'T' + timeInputValue(due),
+      cat: s.cat,
+      prio: s.prio,
+      note: ''
+    });
+    var el = wrap.querySelector('.todo');
+    el.dataset.created = new Date(base.getFullYear(), base.getMonth(), base.getDate() - s.ago, 9, 0).toISOString();
+    if (s.done) {
+      el.classList.add('done');
+      el.querySelector('.checkbox').setAttribute('aria-checked', 'true');
+    }
+    homeGroups.appendChild(wrap);
+  });
+
+  renderHome();
+})();
 </script>
 </body>
 </html>
