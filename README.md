@@ -1,6 +1,6 @@
 # ToDo · Flutter 待办清单
 
-一个基于 Flutter（Material 3）实现的待办清单 App，配套单文件高保真 HTML 原型，用于演示移动软件动画课程中的 9.1 / 9.4 / 9.6 / 9.7 四项动画实践。
+一个基于 Flutter（Material 3）实现的待办清单 App，配套单文件高保真 HTML 原型。
 
 ## 功能
 
@@ -27,15 +27,6 @@
 | ![统计明细](docs/screenshots/stats.png) | ![深色模式](docs/screenshots/profile-dark.png) | |
 
 > 截图取自 Android 模拟器（Pixel 6）运行 1.0.0 安装包的实拍画面。
-
-## 动画实践
-
-| 知识点 | 实现位置 | 说明 |
-| --- | --- | --- |
-| 9.1 AnimationController + Tween + Curve | `todo_app/lib/widgets/animated_counter.dart` | 统计数字从旧值滚动到新值 |
-| 9.4 Hero | `home_page.dart` ⇄ `detail_page.dart` | 列表卡片封面与详情头图的共享元素转场 |
-| 9.6 AnimatedSwitcher | `home_page.dart` | 剩余待办数量 / 概览文字的切换动画 |
-| 9.7 隐式动画家族 | `profile_page.dart` | `AnimatedContainer` / `AnimatedRotation` / `AnimatedDefaultTextStyle` / `AnimatedOpacity` 组合完成「本周完成情况」柱状图的展开收起 |
 
 ## 目录结构
 
@@ -102,10 +93,10 @@ flutter build apk --release
 
 ### v1.0.0
 
-首个版本：待办管理、日历视图、统计明细、本地持久化、头像与姓名、深色模式、通知提醒，以及 9.1 / 9.4 / 9.6 / 9.7 四项动画实践。
+首个版本：待办管理、日历视图、统计明细、本地持久化、头像与姓名、深色模式、通知提醒。
 
 ## 手机下载
 
-![扫码下载 APK](docs/download-qr.png)
+![扫码下载 1.1.0 安装包](docs/download-qr-v1.1.0.png)
 
 用手机扫描二维码即可直接下载安装包；也可以前往 [Releases](https://github.com/zzsycloud/todo-app-flutter/releases) 手动下载 `todo-app-release.apk`，或直接点击 [v1.1.0 安装包](https://github.com/zzsycloud/todo-app-flutter/releases/download/v1.1.0/todo-app-release.apk)。Android 13 及以上首次开启通知提醒时需授予通知权限。
