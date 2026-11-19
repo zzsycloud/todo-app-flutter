@@ -269,7 +269,7 @@ button { font-family: inherit; border: 0; background: none; color: inherit; curs
   transition: background-color var(--dur-medium) var(--easing);
 }
 
-/* 9.7 隐式动画：勾选后背景过渡 */
+/* 完成态：勾选后背景过渡 */
 .todo.done { background: var(--surface-container); }
 
 .checkbox {
@@ -322,7 +322,7 @@ button { font-family: inherit; border: 0; background: none; color: inherit; curs
   transition: color var(--dur-medium) var(--easing);
 }
 
-/* 9.7 隐式动画：完成态文字变灰 + 删除线 */
+/* 完成态：文字变灰 + 删除线 */
 .todo.done .todo-title {
   color: var(--on-surface-variant);
   text-decoration: line-through;
@@ -354,6 +354,34 @@ button { font-family: inherit; border: 0; background: none; color: inherit; curs
   color: var(--on-surface-variant);
 }
 .todo-prio.high { color: var(--error); }
+
+/* 列表卡片上的子任务进度行 */
+.todo-subtasks {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--on-surface-variant);
+  padding: 1px 0;
+}
+.todo-subtasks .ts-bar {
+  width: 72px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--surface-variant);
+  overflow: hidden;
+  flex: 0 0 72px;
+}
+.todo-subtasks .ts-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: 2px;
+  background: var(--primary);
+  transition: width var(--dur-medium) var(--easing);
+}
+.todo.done .todo-subtasks .ts-fill { background: var(--on-surface-variant); }
 
 /* 行尾更多按钮 48 × 48 */
 .menu-btn {
@@ -411,7 +439,7 @@ button { font-family: inherit; border: 0; background: none; color: inherit; curs
 }
 .thumb .i { width: 50%; height: 50%; }
 
-/* 9.7 隐式动画：完成态缩略图去色 */
+/* 完成态：缩略图去色 */
 .todo.done .thumb { filter: grayscale(1); opacity: 0.55; }
 
 /* Hero 配色（按分类） */
@@ -500,6 +528,8 @@ button { font-family: inherit; border: 0; background: none; color: inherit; curs
   justify-content: flex-end;
   align-items: stretch;
   pointer-events: none;
+  border-radius: 12px;
+  overflow: hidden;
 }
 .swipe-wrap.open .swipe-actions { pointer-events: auto; }
 
@@ -516,7 +546,11 @@ button { font-family: inherit; border: 0; background: none; color: inherit; curs
 .swipe-act .i { width: 20px; height: 20px; }
 .swipe-edit { background: var(--secondary-container); color: var(--on-secondary-container); }
 .swipe-toggle { background: var(--primary-container); color: var(--on-primary-container); }
-.swipe-del { background: var(--error-container); color: var(--on-error-container); }
+.swipe-del {
+  background: var(--error-container);
+  color: var(--on-error-container);
+  border-radius: 0 12px 12px 0;
+}
 
 .todo.dragging { transition: none; }
 .todo.snap { transition: transform 200ms var(--easing); }
@@ -662,6 +696,94 @@ body.dark .due-row input { color-scheme: dark; }
   color: var(--on-surface-variant);
 }
 
+/* ---------- 详情页子任务卡片 ---------- */
+.subtask-card {
+  margin: 8px 16px 0;
+  padding: 12px 16px 8px;
+}
+
+.subtask-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+}
+.subtask-head .notes-title { margin-bottom: 0; }
+.subtask-head .text-btn {
+  margin-left: 0;
+  height: 36px;
+  padding: 0 8px;
+}
+.subtask-count {
+  margin-left: auto;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--on-surface-variant);
+}
+
+.subtask-empty {
+  padding: 4px 0 8px;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--on-surface-variant);
+}
+
+.subtask-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 2px 0;
+  border-top: 1px solid var(--outline-variant);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.subtask-row .st-circle {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+  border-radius: 50%;
+  border: 2px solid var(--outline);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  transition: background-color var(--dur-short) linear,
+              border-color var(--dur-short) linear,
+              color var(--dur-short) linear;
+}
+.subtask-row .st-circle .i { width: 14px; height: 14px; }
+.subtask-row.done .st-circle {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
+}
+.subtask-row .st-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--on-surface);
+  overflow-wrap: anywhere;
+}
+.subtask-row.done .st-text {
+  color: var(--on-surface-variant);
+  text-decoration: line-through;
+}
+.subtask-row .st-close {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--on-surface-variant);
+  position: relative;
+  overflow: hidden;
+}
+.subtask-row .st-close .i { width: 18px; height: 18px; }
+
 .detail-bottom {
   flex: 0 0 72px;
   height: 72px;
@@ -798,7 +920,7 @@ body.dark .due-row input { color-scheme: dark; }
 }
 .expand-head.open .chevron { transform: rotate(180deg); }
 
-/* 9.7 隐式动画：展开 / 收起 */
+/* 展开 / 收起过渡 */
 .expand-body {
   max-height: 0;
   opacity: 0;
@@ -1026,7 +1148,108 @@ body.dark .due-row input { color-scheme: dark; }
 
 .editor-danger { margin: 24px 16px 0; }
 
-/* ---------- AnimatedSwitcher 数字 / 文字切换 ---------- */
+/* ---------- 新建 / 编辑页：子任务 ---------- */
+.subtask-editor { display: flex; flex-direction: column; }
+
+.subtask-edit {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 48px;
+  border-bottom: 1px solid var(--outline-variant);
+}
+.subtask-edit:last-child { border-bottom: 0; }
+
+.se-check {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  border-radius: 50%;
+  position: relative;
+  overflow: hidden;
+}
+.se-check .dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--outline);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  transition: background-color var(--dur-short) linear,
+              border-color var(--dur-short) linear,
+              color var(--dur-short) linear;
+}
+.se-check .dot .i { width: 14px; height: 14px; }
+.se-check.on .dot {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
+}
+
+.se-input {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  border: 0;
+  background: transparent;
+  outline: none;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--on-surface);
+}
+.se-input::placeholder { color: var(--on-surface-variant); }
+
+.se-del {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--on-surface-variant);
+  position: relative;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+.se-del .i { width: 18px; height: 18px; }
+
+.subtask-add { margin: 4px 0 0 -12px; }
+
+.subtask-meter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--on-surface-variant);
+}
+.subtask-meter .st-bar {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--surface-variant);
+  overflow: hidden;
+}
+.subtask-meter .st-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: 2px;
+  background: var(--primary);
+  transition: width var(--dur-short) linear;
+}
+.subtask-meter .st-pct { flex: 0 0 auto; }
+
+/* ---------- 数字 / 文字切换 ---------- */
 .switch-num {
   display: inline-grid;
   justify-items: start;
@@ -1240,6 +1463,40 @@ body.dark .overview .progress { background: rgba(234, 221, 255, 0.12); }
   text-align: center;
 }
 
+/* 首页空状态 */
+.empty-state {
+  margin-top: 72px;
+  padding: 0 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.empty-ico {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--surface-container);
+  color: var(--on-surface-variant);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+.empty-ico .i { width: 32px; height: 32px; }
+.empty-title {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+  color: var(--on-surface);
+}
+.empty-desc {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--on-surface-variant);
+}
+
 /* 统计明细行：副标题允许换行，完整显示创建时间 */
 .todo.row-multi .todo-sub {
   white-space: normal;
@@ -1285,7 +1542,7 @@ body.dark .overview .progress { background: rgba(234, 221, 255, 0.12); }
 .notif-title { font-size: 14px; line-height: 20px; font-weight: 500; color: var(--on-surface); }
 .notif-body { font-size: 12px; line-height: 16px; color: var(--on-surface-variant); margin-top: 2px; }
 
-/* ---------- M3 对话框（修改姓名 / 默认分组） ---------- */
+/* ---------- M3 对话框 ---------- */
 .dialog-scrim {
   position: absolute;
   inset: 0;
@@ -1386,12 +1643,12 @@ body.dark .overview .progress { background: rgba(234, 221, 255, 0.12); }
       <!-- 今日概览 Card（filled / primaryContainer） -->
       <div class="card filled overview">
         <div class="ov-left">
-          <div class="ov-num switch-num" id="ovRemaining"><span class="sw-item">7</span></div>
+          <div class="ov-num switch-num" id="ovRemaining"><span class="sw-item">0</span></div>
           <div class="ov-cap">项剩余待办</div>
         </div>
         <div class="ov-right">
-          <div class="ov-meta" id="ovDoneText">已完成 1 / 共 8</div>
-          <div class="progress"><div class="fill" id="ovFill" style="width:12.5%"></div></div>
+          <div class="ov-meta" id="ovDoneText">已完成 0 / 共 0</div>
+          <div class="progress"><div class="fill" id="ovFill" style="width:0%"></div></div>
         </div>
       </div>
 
@@ -1435,23 +1692,37 @@ body.dark .overview .progress { background: rgba(234, 221, 255, 0.12); }
         <svg class="i"><use id="detailHeroIcon" href="#i-book"/></svg>
       </div>
 
-      <div class="detail-title" id="detailTitle">提交移动软件动画课程作业</div>
+      <div class="detail-title" id="detailTitle"></div>
 
       <div class="chip-row">
         <div class="chip high" id="detailPrio">高优先级</div>
         <div class="chip switch-num" id="detailState"><span class="sw-item">进行中</span></div>
       </div>
 
-      <!-- 9.1 显式动画：完成度计数 -->
+      <!-- 完成度计数 -->
       <div class="card detail-progress">
         <div class="dp-head">
           <div>
             <div class="dp-label">完成度</div>
             <div class="dp-num" id="detailPct" data-v="0">0%</div>
           </div>
-          <div class="dp-sub">3 / 5 子任务</div>
+          <div class="dp-sub" id="detailSubMeta">暂无子任务</div>
         </div>
         <div class="progress"><div class="fill" id="detailBar" style="width:0%"></div></div>
+      </div>
+
+      <!-- 子任务 -->
+      <div class="card subtask-card">
+        <div class="subtask-head">
+          <div class="notes-title">子任务</div>
+          <div class="subtask-count" id="detailSubCount">0 / 0</div>
+          <button class="text-btn press" onclick="openSubtaskDialog()">
+            <svg class="i"><use href="#i-add"/></svg>添加
+          </button>
+        </div>
+        <div id="detailSubList">
+          <div class="subtask-empty">把这件事拆成几个小步骤，勾选后完成度会自动更新。</div>
+        </div>
       </div>
 
       <div class="meta-list">
@@ -1540,19 +1811,21 @@ body.dark .overview .progress { background: rgba(234, 221, 255, 0.12); }
         <div class="expand-head press" onclick="toggleExpand(this)">
           <div class="eh-text">
             <div class="eh-title">本周完成情况</div>
-            <div class="eh-sub">周一至周五 · 共 20 项</div>
+            <div class="eh-sub" id="weekSub">周一至周日 · 本周共 0 项</div>
           </div>
           <svg class="i chevron"><use href="#i-expand"/></svg>
         </div>
         <div class="expand-body" id="expandBody">
-          <div class="bars">
-            <div class="bar-col"><div class="bar" style="--h:24px"></div><div class="bar-label">一</div></div>
-            <div class="bar-col"><div class="bar" style="--h:40px"></div><div class="bar-label">二</div></div>
-            <div class="bar-col"><div class="bar" style="--h:16px"></div><div class="bar-label">三</div></div>
-            <div class="bar-col"><div class="bar" style="--h:48px"></div><div class="bar-label">四</div></div>
-            <div class="bar-col"><div class="bar" style="--h:32px"></div><div class="bar-label">五</div></div>
+          <div class="bars" id="weekBars">
+            <div class="bar-col"><div class="bar" style="--h:0px"></div><div class="bar-label">一</div></div>
+            <div class="bar-col"><div class="bar" style="--h:0px"></div><div class="bar-label">二</div></div>
+            <div class="bar-col"><div class="bar" style="--h:0px"></div><div class="bar-label">三</div></div>
+            <div class="bar-col"><div class="bar" style="--h:0px"></div><div class="bar-label">四</div></div>
+            <div class="bar-col"><div class="bar" style="--h:0px"></div><div class="bar-label">五</div></div>
+            <div class="bar-col"><div class="bar" style="--h:0px"></div><div class="bar-label">六</div></div>
+            <div class="bar-col"><div class="bar" style="--h:0px"></div><div class="bar-label">日</div></div>
           </div>
-          <div class="expand-total">本周累计完成 20 项，日均 4 项。</div>
+          <div class="expand-total" id="weekTotal">本周还没有完成的待办，勾选一条试试看。</div>
         </div>
       </div>
 
@@ -1566,12 +1839,6 @@ body.dark .overview .progress { background: rgba(234, 221, 255, 0.12); }
           <span class="switch" id="notifySwitch" role="switch" aria-checked="false"><span class="knob"></span></span>
         </div>
         <div class="divider"></div>
-        <div class="setting press" onclick="pickDefaultGroup()">
-          <svg class="i"><use href="#i-folder"/></svg>
-          <span class="s-label">默认分组</span>
-          <span class="s-value" id="defaultGroupValue">今天</span>
-        </div>
-        <div class="divider"></div>
         <div class="setting press" onclick="toggleDark(!darkMode)">
           <svg class="i"><use href="#i-moon"/></svg>
           <span class="s-label">深色模式</span>
@@ -1579,7 +1846,7 @@ body.dark .overview .progress { background: rgba(234, 221, 255, 0.12); }
         </div>
       </div>
 
-      <div class="ver">版本 1.1.0</div>
+      <div class="ver">版本 1.2.0</div>
     </div>
 
     <div class="navbar">
@@ -1609,7 +1876,7 @@ body.dark .overview .progress { background: rgba(234, 221, 255, 0.12); }
 
       <div class="field-block" id="blockTitle">
         <label class="field-label" for="fTitle">标题</label>
-        <div class="field"><input id="fTitle" type="text" placeholder="例如：完成动画课程作业"></div>
+        <div class="field"><input id="fTitle" type="text" placeholder="例如：完成课程作业"></div>
         <div class="field-help">请输入待办标题</div>
       </div>
 
@@ -1670,6 +1937,19 @@ body.dark .overview .progress { background: rgba(234, 221, 255, 0.12); }
           <button class="choice press" data-value="既不重要也不紧急">
             <svg class="i"><use href="#i-check"/></svg>既不重要也不紧急
           </button>
+        </div>
+      </div>
+
+      <div class="field-block">
+        <div class="field-label">子任务</div>
+        <div class="subtask-editor" id="fSubtasks"></div>
+        <button class="text-btn press subtask-add" onclick="addEditorSubtask()">
+          <svg class="i"><use href="#i-add"/></svg>添加子任务
+        </button>
+        <div class="subtask-meter">
+          <span id="subtaskMeterText">完成度 0 / 0</span>
+          <span class="st-bar"><span class="st-fill" id="subtaskMeterFill"></span></span>
+          <span class="st-pct" id="subtaskMeterPct">0%</span>
         </div>
       </div>
 
@@ -1738,7 +2018,7 @@ body.dark .overview .progress { background: rgba(234, 221, 255, 0.12); }
     </div>
   </div>
 
-  <!-- M3 对话框：修改姓名 / 选择默认分组 -->
+  <!-- M3 对话框：修改姓名 / 添加子任务 / 自定义分类 -->
   <div class="dialog-scrim" id="dialogScrim" onclick="backdropClose(event)">
     <div class="dialog" onclick="event.stopPropagation()">
       <div class="dialog-title" id="dialogTitle">修改姓名</div>
@@ -1759,7 +2039,7 @@ body.dark .overview .progress { background: rgba(234, 221, 255, 0.12); }
 
 <script>
 /* =====================================================================
-   仅页面跳转与动画演示，不含业务逻辑 / 无后端
+   页面跳转与交互状态，数据保存在内存中 / 无后端
    ===================================================================== */
 
 var VP = document.getElementById('viewport');
@@ -1777,6 +2057,12 @@ var detailGroup = document.getElementById('detailGroup');
 var detailCat = document.getElementById('detailCat');
 var detailPct = document.getElementById('detailPct');
 var detailBar = document.getElementById('detailBar');
+var detailSubList = document.getElementById('detailSubList');
+var detailSubCount = document.getElementById('detailSubCount');
+var detailSubMeta = document.getElementById('detailSubMeta');
+var weekBars = document.getElementById('weekBars');
+var weekSub = document.getElementById('weekSub');
+var weekTotal = document.getElementById('weekTotal');
 var detailBtn = document.getElementById('detailBtn');
 var ovRemaining = document.getElementById('ovRemaining');
 var ovDoneText = document.getElementById('ovDoneText');
@@ -1791,6 +2077,10 @@ var fTitle = document.getElementById('fTitle');
 var fDate = document.getElementById('fDate');
 var fClock = document.getElementById('fClock');
 var fNote = document.getElementById('fNote');
+var fSubtasks = document.getElementById('fSubtasks');
+var subtaskMeterText = document.getElementById('subtaskMeterText');
+var subtaskMeterFill = document.getElementById('subtaskMeterFill');
+var subtaskMeterPct = document.getElementById('subtaskMeterPct');
 var popupMenu = document.getElementById('popupMenu');
 var homeGroups = document.getElementById('homeGroups');
 
@@ -1828,7 +2118,8 @@ var menuContext = null;
 /* 设置与日历状态 */
 var darkMode = false;
 var notifyEnabled = false;
-var defaultGroup = '今天';
+var editorSubtasks = [];  /* 新建 / 编辑页当前子任务 */
+var subtaskSeq = 0;
 var sortModes = {};      /* 每天独立排序：key = yyyy-m-d，值 = 'time' | 'priority' */
 var customCats = [];     /* 自定义分类，仅保存在本次会话 */
 var editorDue = null;    /* 编辑器当前的截止时间 */
@@ -1836,7 +2127,6 @@ var calRef = new Date();
 var calSelected = new Date();
 var statsFilter = 'all';
 var dialogMode = null;
-var dialogGroup = '今天';
 
 /* ---------- 四象限优先级 ---------- */
 var PRIO = ['重要且紧急', '重要但不紧急', '紧急但不重要', '既不重要也不紧急'];
@@ -1855,6 +2145,230 @@ function catConf(cat) { return CAT[cat] || { cls: 'cat-custom', icon: '#i-tag' }
 /* ---------- 首页待办（日历 / 明细行不计入统计） ---------- */
 function allTodos() {
   return document.querySelectorAll('#homeGroups .todo');
+}
+
+/* ---------- 子任务与完成度 ---------- */
+function newSubtask(title, done) {
+  subtaskSeq += 1;
+  return { id: 's' + subtaskSeq, title: String(title == null ? '' : title), done: !!done };
+}
+
+function getSubtasks(el) {
+  if (!el) return [];
+  if (!el.subtasks) el.subtasks = [];
+  return el.subtasks;
+}
+
+function subStatsOf(el) {
+  var list = getSubtasks(el);
+  var done = list.filter(function (s) { return s.done; }).length;
+  var total = list.length;
+  var pct = total ? Math.round(done / total * 100) : (el.classList.contains('done') ? 100 : 0);
+  return { total: total, done: done, pct: pct };
+}
+
+function completionPct(el) { return subStatsOf(el).pct; }
+
+/* 列表卡片上的「子任务 x/y」与细进度条 */
+function updateHomeSubRow(el) {
+  var row = el.querySelector('.todo-subtasks');
+  if (!row) return;
+  var st = subStatsOf(el);
+  if (!st.total) {
+    row.style.display = 'none';
+    row.innerHTML = '';
+    return;
+  }
+  row.style.display = 'flex';
+  row.innerHTML = '<span>子任务 ' + st.done + '/' + st.total + '</span>' +
+    '<span class="ts-bar"><span class="ts-fill" style="width:' + st.pct + '%"></span></span>';
+}
+
+/* 写入完成态：class / aria / 完成时间 / 子任务进度 */
+function applyDoneState(item, done) {
+  var was = item.classList.contains('done');
+  item.classList.toggle('done', done);
+  var cb = item.querySelector('.checkbox');
+  if (cb) cb.setAttribute('aria-checked', done ? 'true' : 'false');
+  if (done) {
+    if (!was || !item.dataset.doneAt) item.dataset.doneAt = new Date().toISOString();
+  } else {
+    delete item.dataset.doneAt;
+  }
+  updateHomeSubRow(item);
+  syncDetailChrome(item, true);
+}
+
+/* 由子任务反推待办完成态：全部勾选才算完成 */
+function syncCompletionFromSubtasks(item) {
+  var list = getSubtasks(item);
+  if (!list.length) {
+    updateHomeSubRow(item);
+    syncDetailChrome(item, true);
+    return;
+  }
+  var allDone = list.every(function (s) { return s.done; });
+  applyDoneState(item, allDone);
+}
+
+/* 详情页完成度与子任务同步 */
+function refreshDetailCompletion(item, animate) {
+  var st = subStatsOf(item);
+  if (animate) {
+    animateProgress(st.pct, 700);
+  } else {
+    cancelAnimationFrame(detailPct._raf);
+    detailPct.dataset.v = st.pct;
+    detailPct.textContent = st.pct + '%';
+    detailBar.style.width = st.pct + '%';
+  }
+  detailSubMeta.textContent = st.total
+    ? (st.done + ' / ' + st.total + ' 子任务')
+    : '暂无子任务';
+}
+
+function syncDetailChrome(item, animate) {
+  if (!item || currentDetailItem !== item) return;
+  detailDone = item.classList.contains('done');
+  detailBtn.textContent = detailDone ? '已完成' : '标记完成';
+  detailBtn.classList.toggle('done', detailDone);
+  detailState.className = 'chip switch-num' + (detailDone ? ' done' : '');
+  detailState.innerHTML = '<span class="sw-item">' + (detailDone ? '已完成' : '进行中') + '</span>';
+  renderDetailSubtasks(item);
+  refreshDetailCompletion(item, animate);
+}
+
+function renderDetailSubtasks(item) {
+  var list = getSubtasks(item);
+  var st = subStatsOf(item);
+  detailSubCount.textContent = st.done + ' / ' + st.total;
+  detailSubList.innerHTML = '';
+
+  if (!list.length) {
+    detailSubList.innerHTML = '<div class="subtask-empty">把这件事拆成几个小步骤，勾选后完成度会自动更新。</div>';
+    return;
+  }
+
+  list.forEach(function (s) {
+    var row = document.createElement('div');
+    row.className = 'subtask-row press' + (s.done ? ' done' : '');
+    row.innerHTML =
+      '<span class="st-circle"><svg class="i"><use href="#i-check"/></svg></span>' +
+      '<span class="st-text"></span>' +
+      '<button class="st-close" aria-label="删除子任务"><svg class="i"><use href="#i-close"/></svg></button>';
+    row.querySelector('.st-text').textContent = s.title;
+    row.addEventListener('click', function (e) {
+      if (e.target.closest('.st-close')) return;
+      toggleDetailSubtask(item, s.id);
+    });
+    row.querySelector('.st-close').addEventListener('click', function (e) {
+      e.stopPropagation();
+      removeDetailSubtask(item, s.id);
+    });
+    bindPress(row);
+    detailSubList.appendChild(row);
+  });
+}
+
+function toggleDetailSubtask(item, id) {
+  var target = getSubtasks(item).filter(function (s) { return s.id === id; })[0];
+  if (!target) return;
+  target.done = !target.done;
+  syncCompletionFromSubtasks(item);
+  updateOverview();
+}
+
+function removeDetailSubtask(item, id) {
+  item.subtasks = getSubtasks(item).filter(function (s) { return s.id !== id; });
+  syncCompletionFromSubtasks(item);
+  updateOverview();
+}
+
+function openSubtaskDialog() {
+  if (!currentDetailItem) return;
+  openDialog('subtask');
+}
+
+/* 新建 / 编辑页子任务编辑器 */
+function updateEditorMeter() {
+  var total = editorSubtasks.length;
+  var done = editorSubtasks.filter(function (s) { return s.done; }).length;
+  var pct = total ? Math.round(done / total * 100) : 0;
+  subtaskMeterText.textContent = '完成度 ' + done + ' / ' + total;
+  subtaskMeterFill.style.width = pct + '%';
+  subtaskMeterPct.textContent = pct + '%';
+}
+
+function renderEditorSubtasks() {
+  fSubtasks.innerHTML = '';
+  editorSubtasks.forEach(function (s) {
+    var row = document.createElement('div');
+    row.className = 'subtask-edit';
+    row.innerHTML =
+      '<button class="se-check' + (s.done ? ' on' : '') + '" aria-label="切换完成">' +
+        '<span class="dot"><svg class="i"><use href="#i-check"/></svg></span>' +
+      '</button>' +
+      '<input class="se-input" type="text" maxlength="40" placeholder="子任务标题">' +
+      '<button class="se-del" aria-label="删除子任务"><svg class="i"><use href="#i-close"/></svg></button>';
+
+    var input = row.querySelector('.se-input');
+    input.value = s.title;
+    input.addEventListener('input', function () { s.title = input.value; });
+
+    row.querySelector('.se-check').addEventListener('click', function () {
+      s.done = !s.done;
+      row.querySelector('.se-check').classList.toggle('on', s.done);
+      updateEditorMeter();
+    });
+
+    row.querySelector('.se-del').addEventListener('click', function () {
+      editorSubtasks = editorSubtasks.filter(function (x) { return x !== s; });
+      renderEditorSubtasks();
+    });
+
+    fSubtasks.appendChild(row);
+  });
+  updateEditorMeter();
+}
+
+function addEditorSubtask() {
+  editorSubtasks.push(newSubtask('', false));
+  renderEditorSubtasks();
+  var inputs = fSubtasks.querySelectorAll('.se-input');
+  if (inputs.length) inputs[inputs.length - 1].focus();
+}
+
+/* 本周完成情况柱状图（周一为第一列） */
+function renderWeekBars() {
+  if (!weekBars) return;
+  var base = startOfDay(new Date());
+  var monday = new Date(base.getFullYear(), base.getMonth(),
+                        base.getDate() - ((base.getDay() + 6) % 7));
+  var counts = [0, 0, 0, 0, 0, 0, 0];
+
+  Array.prototype.forEach.call(allTodos(), function (t) {
+    if (!t.dataset.doneAt) return;
+    var d = new Date(t.dataset.doneAt);
+    if (isNaN(d.getTime())) return;
+    var diff = Math.round((startOfDay(d) - monday) / 86400000);
+    if (diff >= 0 && diff < 7) counts[diff] += 1;
+  });
+
+  var max = Math.max.apply(null, counts);
+  var total = counts.reduce(function (a, b) { return a + b; }, 0);
+  var cols = weekBars.querySelectorAll('.bar-col');
+
+  counts.forEach(function (c, i) {
+    var bar = cols[i] && cols[i].querySelector('.bar');
+    if (!bar) return;
+    var h = max ? Math.round(c / max * 48) : 0;
+    bar.style.setProperty('--h', h + 'px');
+  });
+
+  weekSub.textContent = '周一至周日 · 本周共 ' + total + ' 项';
+  weekTotal.textContent = total
+    ? '本周累计完成 ' + total + ' 项。'
+    : '本周还没有完成的待办，勾选一条试试看。';
 }
 
 function pad2(n) { return n < 10 ? '0' + n : '' + n; }
@@ -1986,7 +2500,12 @@ function renderHome() {
   homeGroups.innerHTML = '';
 
   if (!sections.length) {
-    homeGroups.innerHTML = '<div class="empty">暂无待办</div>';
+    homeGroups.innerHTML =
+      '<div class="empty-state">' +
+        '<div class="empty-ico"><svg class="i"><use href="#i-list"/></svg></div>' +
+        '<div class="empty-title">还没有待办</div>' +
+        '<div class="empty-desc">点击右下角的 + 新建第一条待办</div>' +
+      '</div>';
     updateOverview();
     return;
   }
@@ -2046,7 +2565,7 @@ function vRect(el) {
   return { left: r.left - v.left, top: r.top - v.top, w: r.width, h: r.height };
 }
 
-/* ---------- 9.6 AnimatedSwitcher：数字 / 文字切换 ---------- */
+/* ---------- 数字 / 文字切换 ---------- */
 function switchNumber(box, text) {
   var current = box.querySelector('.sw-item:not(.sw-out)');
   if (current && current.textContent === text) return;
@@ -2063,7 +2582,7 @@ function switchNumber(box, text) {
   setTimeout(function () { span.classList.remove('sw-in'); }, 320);
 }
 
-/* ---------- 9.1 显式动画：Tween + CurvedAnimation(easeOutCubic) ---------- */
+/* ---------- 数值补间（easeOutCubic） ---------- */
 function animateValue(el, to, dur) {
   var from = Number(el.dataset.v || 0);
   var t0 = performance.now();
@@ -2115,15 +2634,13 @@ function updateOverview() {
   switchNumber(ovRemaining, String(remaining));
   ovDoneText.textContent = '已完成 ' + done + ' / 共 ' + total;
   ovFill.style.width = total ? (done / total * 100) + '%' : '0%';
+  renderWeekBars();
   refreshStatsIfVisible();
 }
 
 function toggleTodo(e, item) {
   e.stopPropagation();
-  var done = item.classList.toggle('done');
-  var cb = item.querySelector('.checkbox');
-  cb.setAttribute('aria-checked', done ? 'true' : 'false');
-  updateOverview();
+  setItemDone(item, !item.classList.contains('done'));
 }
 
 /* ---------- 详情数据填充 ---------- */
@@ -2151,25 +2668,16 @@ function resetDetail(item) {
   detailBtn.classList.toggle('done', detailDone);
   detailState.className = 'chip switch-num' + (detailDone ? ' done' : '');
   detailState.innerHTML = '<span class="sw-item">' + (detailDone ? '已完成' : '进行中') + '</span>';
-  detailPct.dataset.v = 0;
-  detailPct.textContent = '0%';
-  detailBar.style.width = '0%';
-  animateProgress(detailDone ? 100 : 60, 1000);
+  renderDetailSubtasks(item);
+  refreshDetailCompletion(item, false);
 }
 
 function markDetailDone() {
   if (!currentDetailItem) return;
-  detailDone = !detailDone;
-  switchNumber(detailState, detailDone ? '已完成' : '进行中');
-  detailState.classList.toggle('done', detailDone);
-  animateProgress(detailDone ? 100 : 60, 900);
-  detailBtn.textContent = detailDone ? '已完成' : '标记完成';
-  detailBtn.classList.toggle('done', detailDone);
-  setItemDone(currentDetailItem, detailDone);
-  updateOverview();
+  setItemDone(currentDetailItem, !currentDetailItem.classList.contains('done'));
 }
 
-/* ---------- 9.4 Hero 转场：push ---------- */
+/* ---------- 详情页转场：push ---------- */
 function measureDetailHero() {
   detailScroll.scrollTop = 0;
   detailPage.classList.add('measure');
@@ -2219,7 +2727,7 @@ function openTodo(item, srcEl) {
   }, 340);
 }
 
-/* ---------- 9.4 Hero 转场：pop（反向飞回） ---------- */
+/* ---------- 详情页转场：pop（反向飞回） ---------- */
 function closeDetail() {
   if (flying) return;
   flying = true;
@@ -2278,7 +2786,7 @@ function switchTab(tab) {
   if (tab === 'profile') refreshStats();
 }
 
-/* ---------- 9.1：个人中心统计数字按实际数据计数 ---------- */
+/* ---------- 个人中心统计数字按实际数据计数 ---------- */
 function counts() {
   var all = Array.prototype.slice.call(allTodos());
   var done = all.filter(function (t) { return t.classList.contains('done'); }).length;
@@ -2290,6 +2798,7 @@ function refreshStats() {
   animateValue(document.getElementById('statDone'), c.done, 700);
   animateValue(document.getElementById('statDoing'), c.doing, 700);
   animateValue(document.getElementById('statTotal'), c.total, 1100);
+  renderWeekBars();
 }
 
 function refreshStatsIfVisible() {
@@ -2298,7 +2807,7 @@ function refreshStatsIfVisible() {
   }
 }
 
-/* ---------- 9.7 隐式动画：展开 / 收起 ---------- */
+/* ---------- 展开 / 收起 ---------- */
 function toggleExpand(head) {
   head.classList.toggle('open');
   expandBody.classList.toggle('open');
@@ -2306,8 +2815,10 @@ function toggleExpand(head) {
 
 /* ---------- 完成状态写入条目 ---------- */
 function setItemDone(item, done) {
-  item.classList.toggle('done', done);
-  item.querySelector('.checkbox').setAttribute('aria-checked', done ? 'true' : 'false');
+  var list = getSubtasks(item);
+  list.forEach(function (s) { s.done = done; });
+  applyDoneState(item, done);
+  updateOverview();
 }
 
 /* ---------- 分组计数由首页分区标题直接渲染 ---------- */
@@ -2491,8 +3002,10 @@ function openCreate() {
   fTitle.value = '';
   fNote.value = '';
   blockTitle.classList.remove('has-error');
+  editorSubtasks = [];
+  renderEditorSubtasks();
 
-  syncDueInputs(defaultDueFor(defaultGroup));
+  syncDueInputs(defaultDueFor('今天'));
   renderCatChoices('学习');
   selectChoice('fPrio', '重要但不紧急');
 
@@ -2514,6 +3027,10 @@ function openEditor(item) {
   fTitle.value = item.dataset.title;
   fNote.value = item.dataset.note || '';
   blockTitle.classList.remove('has-error');
+  editorSubtasks = getSubtasks(item).map(function (s) {
+    return { id: s.id, title: s.title, done: !!s.done };
+  });
+  renderEditorSubtasks();
 
   syncDueInputs(dueOf(item));
   renderCatChoices(item.dataset.cat);
@@ -2555,18 +3072,27 @@ function saveEditor() {
     return;
   }
 
+  var subtasks = [];
+  editorSubtasks.forEach(function (s) {
+    var t = s.title.trim();
+    if (!t) return;
+    subtasks.push({ id: s.id || newSubtask(t).id, title: t, done: !!s.done });
+  });
+
   var data = {
     title: title,
     due: dateInputValue(due) + 'T' + timeInputValue(due),
     cat: choiceValue('fCat'),
     prio: choiceValue('fPrio') || '重要但不紧急',
-    note: fNote.value.trim()
+    note: fNote.value.trim(),
+    subtasks: subtasks
   };
 
   if (editorMode === 'create') {
     var wrap = buildTodo(data);
     var el = wrap.querySelector('.todo');
     el.dataset.created = new Date().toISOString();
+    syncCompletionFromSubtasks(el);
     homeGroups.appendChild(wrap);
     renderHome();
     if (notifyEnabled) showNotification('已添加待办', data.title);
@@ -2631,6 +3157,7 @@ function buildTodo(data) {
           '<span class="todo-sub-cat"></span><span class="sep"></span>' +
           '<span class="todo-prio"></span>' +
         '</div>' +
+        '<div class="todo-subtasks"></div>' +
       '</div>' +
       '<div class="thumb ' + conf.cls + '"><svg class="i"><use href="' + conf.icon + '"/></svg></div>' +
       '<button class="menu-btn press" aria-label="更多"><svg class="i"><use href="#i-more"/></svg></button>' +
@@ -2641,6 +3168,9 @@ function buildTodo(data) {
   el.dataset.due = data.due;
   el.dataset.cat = data.cat;
   el.dataset.prio = data.prio;
+  el.subtasks = (data.subtasks || []).map(function (s) {
+    return { id: s.id || newSubtask(s.title).id, title: s.title, done: !!s.done };
+  });
 
   fillTodoText(el, data);
   bindTodoEvents(el);
@@ -2657,6 +3187,7 @@ function fillTodoText(el, data) {
   var prio = el.querySelector('.todo-prio');
   prio.textContent = data.prio;
   prio.classList.toggle('high', data.prio === '重要且紧急');
+  updateHomeSubRow(el);
 }
 
 function applyTodoData(item, data) {
@@ -2664,8 +3195,12 @@ function applyTodoData(item, data) {
   item.dataset.due = data.due;
   item.dataset.cat = data.cat;
   item.dataset.prio = data.prio;
+  item.subtasks = (data.subtasks || []).map(function (s) {
+    return { id: s.id || newSubtask(s.title).id, title: s.title, done: !!s.done };
+  });
 
   fillTodoText(item, data);
+  syncCompletionFromSubtasks(item);
 
   var thumb = item.querySelector('.thumb');
   thumb.className = 'thumb ' + conf.cls;
@@ -2965,7 +3500,6 @@ function onAvatarPicked(e) {
 }
 
 function openNameDialog() { openDialog('name'); }
-function pickDefaultGroup() { openDialog('group'); }
 
 function openDialog(mode) {
   dialogMode = mode;
@@ -2974,18 +3508,10 @@ function openDialog(mode) {
     dialogConfirm.textContent = '保存';
     dialogContent.innerHTML = '<div class="field"><input id="dlgName" type="text" maxlength="20" placeholder="请输入姓名"></div>';
     document.getElementById('dlgName').value = userNameEl.textContent;
-  } else if (mode === 'group') {
-    dialogGroup = defaultGroup;
-    dialogTitle.textContent = '默认分组';
-    dialogConfirm.textContent = '确定';
-    dialogContent.innerHTML =
-      '<button class="dlg-option press" data-group="今天" onclick="selectDialogGroup(\'今天\')">今天' +
-        '<svg class="i"><use href="#i-check"/></svg></button>' +
-      '<button class="dlg-option press" data-group="明天" onclick="selectDialogGroup(\'明天\')">明天' +
-        '<svg class="i"><use href="#i-check"/></svg></button>' +
-      '<button class="dlg-option press" data-group="其他" onclick="selectDialogGroup(\'其他\')">其他' +
-        '<svg class="i"><use href="#i-check"/></svg></button>';
-    syncDialogGroup();
+  } else if (mode === 'subtask') {
+    dialogTitle.textContent = '添加子任务';
+    dialogConfirm.textContent = '添加';
+    dialogContent.innerHTML = '<div class="field"><input id="dlgSubtask" type="text" maxlength="40" placeholder="如：先列提纲"></div>';
   } else {
     dialogTitle.textContent = '自定义分类';
     dialogConfirm.textContent = '添加';
@@ -2993,18 +3519,9 @@ function openDialog(mode) {
   }
   dialogScrim.classList.add('open');
   setTimeout(function () {
-    var inp = document.getElementById('dlgName') || document.getElementById('dlgCat');
+    var inp = document.getElementById('dlgName') || document.getElementById('dlgSubtask') || document.getElementById('dlgCat');
     if (inp) inp.focus();
   }, 60);
-}
-
-function selectDialogGroup(v) { dialogGroup = v; syncDialogGroup(); }
-
-function syncDialogGroup() {
-  Array.prototype.forEach.call(dialogContent.querySelectorAll('.dlg-option'), function (o) {
-    o.classList.toggle('sel', o.dataset.group === dialogGroup);
-  });
-  Array.prototype.forEach.call(dialogContent.querySelectorAll('.press'), function (b) { bindPress(b); });
 }
 
 function closeDialog() {
@@ -3021,9 +3538,14 @@ function confirmDialog() {
     var v = document.getElementById('dlgName').value.trim();
     if (!v) return;
     userNameEl.textContent = v;
-  } else if (dialogMode === 'group') {
-    defaultGroup = dialogGroup;
-    document.getElementById('defaultGroupValue').textContent = defaultGroup;
+  } else if (dialogMode === 'subtask') {
+    var subTitle = document.getElementById('dlgSubtask').value.trim();
+    if (!subTitle) return;
+    if (currentDetailItem) {
+      getSubtasks(currentDetailItem).push(newSubtask(subTitle, false));
+      syncCompletionFromSubtasks(currentDetailItem);
+      updateOverview();
+    }
   } else if (dialogMode === 'category') {
     var name = document.getElementById('dlgCat').value.trim();
     if (!name) return;
@@ -3071,41 +3593,9 @@ document.querySelectorAll('.scroll').forEach(function (s) {
   s.addEventListener('scroll', closeMenu, { passive: true });
 });
 
-/* 初始化：构建 1.1.0 示例数据（含一个“其他”日期的待办） */
-(function seedTodos() {
-  var base = startOfDay(new Date());
-  var SEED = [
-    { title: '提交移动软件动画课程作业', day: 0, h: 18, m: 0, cat: '学习', prio: '重要且紧急', ago: 0 },
-    { title: '整理 Flutter 动画笔记', day: 0, h: 20, m: 0, cat: '学习', prio: '重要但不紧急', ago: 0 },
-    { title: '给室友带一杯咖啡', day: 0, h: 9, m: 30, cat: '生活', prio: '既不重要也不紧急', ago: 0, done: true },
-    { title: '预约图书馆自习座位', day: 0, h: 21, m: 0, cat: '生活', prio: '重要但不紧急', ago: 0 },
-    { title: '完成 Hero 转场练习 Demo', day: 0, h: 22, m: 0, cat: '学习', prio: '紧急但不重要', ago: 0 },
-    { title: '复习 AnimationController 生命周期', day: 1, h: 10, m: 0, cat: '学习', prio: '重要但不紧急', ago: 1 },
-    { title: '交电费', day: 1, h: 12, m: 0, cat: '生活', prio: '既不重要也不紧急', ago: 1 },
-    { title: '小组周会 · 进度对齐', day: 1, h: 15, m: 0, cat: '工作', prio: '重要且紧急', ago: 2 },
-    { title: '整理下月课程计划', day: 3, h: 10, m: 0, cat: '学习', prio: '紧急但不重要', ago: 2 }
-  ];
-
-  SEED.forEach(function (s) {
-    var due = new Date(base.getFullYear(), base.getMonth(), base.getDate() + s.day, s.h, s.m);
-    var wrap = buildTodo({
-      title: s.title,
-      due: dateInputValue(due) + 'T' + timeInputValue(due),
-      cat: s.cat,
-      prio: s.prio,
-      note: ''
-    });
-    var el = wrap.querySelector('.todo');
-    el.dataset.created = new Date(base.getFullYear(), base.getMonth(), base.getDate() - s.ago, 9, 0).toISOString();
-    if (s.done) {
-      el.classList.add('done');
-      el.querySelector('.checkbox').setAttribute('aria-checked', 'true');
-    }
-    homeGroups.appendChild(wrap);
-  });
-
-  renderHome();
-})();
+/* 初始化：空列表 + 空状态 */
+renderHome();
+renderWeekBars();
 </script>
 </body>
 </html>
