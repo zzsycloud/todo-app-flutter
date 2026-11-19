@@ -20,7 +20,7 @@
 | **我的** | **统计明细** | **深色模式** |
 | ![我的](docs/screenshots/profile.png) | ![统计明细](docs/screenshots/stats.png) | ![深色模式](docs/screenshots/profile-dark.png) |
 
-> 截图取自 Android 真机运行的 1.0.0 安装包。
+> 截图取自 Android 模拟器（Pixel 6）运行 1.0.0 安装包的实拍画面。
 
 ## 动画实践
 
