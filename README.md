@@ -18,11 +18,13 @@
 
 ## 界面预览
 
-| 首页 | 日历 | 待办详情 |
+| 首页 | 左滑快捷操作 | 新建待办 |
 | --- | --- | --- |
-| ![首页](docs/screenshots/home.png) | ![日历](docs/screenshots/calendar.png) | ![待办详情](docs/screenshots/detail.png) |
-| **我的** | **统计明细** | **深色模式** |
-| ![我的](docs/screenshots/profile.png) | ![统计明细](docs/screenshots/stats.png) | ![深色模式](docs/screenshots/profile-dark.png) |
+| ![首页](docs/screenshots/home.png) | ![左滑快捷操作](docs/screenshots/swipe.png) | ![新建待办](docs/screenshots/editor.png) |
+| **日历** | **待办详情** | **我的** |
+| ![日历](docs/screenshots/calendar.png) | ![待办详情](docs/screenshots/detail.png) | ![我的](docs/screenshots/profile.png) |
+| **统计明细** | **深色模式** | |
+| ![统计明细](docs/screenshots/stats.png) | ![深色模式](docs/screenshots/profile-dark.png) | |
 
 > 截图取自 Android 模拟器（Pixel 6）运行 1.0.0 安装包的实拍画面。
 
@@ -106,4 +108,4 @@ flutter build apk --release
 
 ![扫码下载 APK](docs/download-qr.png)
 
-用手机扫描二维码即可直接下载安装包；也可以前往 [Releases](https://github.com/zzsycloud/todo-app-flutter/releases) 手动下载 `todo-app-release.apk`，或直接点击 [v1.0.0 安装包](https://github.com/zzsycloud/todo-app-flutter/releases/download/v1.0.0/todo-app-release.apk)。Android 13 及以上首次开启通知提醒时需授予通知权限。
+用手机扫描二维码即可直接下载安装包；也可以前往 [Releases](https://github.com/zzsycloud/todo-app-flutter/releases) 手动下载 `todo-app-release.apk`，或直接点击 [v1.1.0 安装包](https://github.com/zzsycloud/todo-app-flutter/releases/download/v1.1.0/todo-app-release.apk)。Android 13 及以上首次开启通知提醒时需授予通知权限。
