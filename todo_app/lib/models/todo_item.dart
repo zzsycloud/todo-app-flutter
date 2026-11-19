@@ -15,6 +15,35 @@ int priorityRank(String priority) {
   return index < 0 ? kPriorityLevels.length - 1 : index;
 }
 
+/// 子任务：挂在待办下面，勾选情况决定父待办的完成度。
+class Subtask {
+  Subtask({
+    required this.id,
+    required this.title,
+    this.done = false,
+  });
+
+  /// 列表 key 依赖该值，创建后保持不变
+  final String id;
+  String title;
+  bool done;
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'title': title,
+    'done': done,
+  };
+
+  factory Subtask.fromJson(Map<String, dynamic> json) {
+    return Subtask(
+      id: json['id'] as String? ??
+          's${DateTime.now().microsecondsSinceEpoch}',
+      title: json['title'] as String? ?? '',
+      done: json['done'] as bool? ?? false,
+    );
+  }
+}
+
 /// 待办数据模型：字段可写入本地存储（JSON）。
 class TodoItem {
   TodoItem({
@@ -26,7 +55,10 @@ class TodoItem {
     this.note = '',
     this.done = false,
     DateTime? createdAt,
-  }) : createdAt = createdAt ?? DateTime.now();
+    List<Subtask>? subtasks,
+    this.completedAt,
+  }) : createdAt = createdAt ?? DateTime.now(),
+       subtasks = subtasks ?? <Subtask>[];
 
   /// Hero tag 依赖该值，创建后保持不变
   final String id;
@@ -46,6 +78,12 @@ class TodoItem {
 
   /// 创建日期：日历页按此字段统计每天新增的待办
   DateTime createdAt;
+
+  /// 子任务列表，勾选后即时影响完成度
+  final List<Subtask> subtasks;
+
+  /// 最近一次标记完成的时间：“我的”页本周完成柱状图按它统计
+  DateTime? completedAt;
 
   /// 今天 / 明天 / 其他（根据 dueAt 实时计算）
   String get group {
@@ -67,6 +105,45 @@ class TodoItem {
     return '$label $hour:$minute';
   }
 
+  int get subtaskTotal => subtasks.length;
+
+  int get subtaskDoneCount => subtasks.where((s) => s.done).length;
+
+  bool get hasSubtasks => subtasks.isNotEmpty;
+
+  /// 完成度：有子任务时按子任务勾选比例，没有子任务时按完成状态
+  double get progress {
+    if (subtasks.isEmpty) return done ? 1 : 0;
+    return subtaskDoneCount / subtasks.length;
+  }
+
+  /// 完成度百分比（四舍五入到整数）
+  int get progressPercent => (progress * 100).round();
+
+  /// 完成度附注文案
+  String get progressLabel {
+    if (subtasks.isEmpty) return done ? '已完成' : '未开始';
+    return '$subtaskDoneCount / ${subtasks.length} 子任务';
+  }
+
+  /// 依据子任务勾选情况同步完成状态：全部勾选才算完成
+  void syncDoneWithSubtasks() {
+    if (subtasks.isEmpty) return;
+    final allDone = subtasks.every((s) => s.done);
+    if (allDone == done) return;
+    done = allDone;
+    completedAt = allDone ? DateTime.now() : null;
+  }
+
+  /// 整体标记完成 / 未完成：连带勾选或取消所有子任务
+  void setDone(bool value) {
+    done = value;
+    completedAt = value ? DateTime.now() : null;
+    for (final subtask in subtasks) {
+      subtask.done = value;
+    }
+  }
+
   int _dayDiff(DateTime value) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -83,6 +160,8 @@ class TodoItem {
     'note': note,
     'done': done,
     'createdAt': createdAt.toIso8601String(),
+    'subtasks': subtasks.map((e) => e.toJson()).toList(),
+    if (completedAt != null) 'completedAt': completedAt!.toIso8601String(),
   };
 
   factory TodoItem.fromJson(Map<String, dynamic> json) {
@@ -98,6 +177,10 @@ class TodoItem {
       createdAt:
           DateTime.tryParse(json['createdAt'] as String? ?? '') ??
           DateTime.now(),
+      subtasks: (json['subtasks'] as List<dynamic>? ?? [])
+          .map((e) => Subtask.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      completedAt: DateTime.tryParse(json['completedAt'] as String? ?? ''),
     );
   }
 

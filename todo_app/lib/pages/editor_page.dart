@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/todo_item.dart';
+import '../widgets/text_input_dialog.dart';
 
 class EditorPage extends StatefulWidget {
   const EditorPage({
@@ -8,7 +9,6 @@ class EditorPage extends StatefulWidget {
     this.initial,
     required this.onSave,
     this.onDelete,
-    this.defaultGroup = '今天',
     this.customCategories = const [],
     this.onAddCategory,
   });
@@ -18,15 +18,27 @@ class EditorPage extends StatefulWidget {
   final ValueChanged<TodoItem> onSave;
   final VoidCallback? onDelete;
 
-  /// 新建待办时使用的默认分组（在“我的”中设置）
-  final String defaultGroup;
-
   /// 已保存的自定义分类
   final List<String> customCategories;
   final ValueChanged<String>? onAddCategory;
 
   @override
   State<EditorPage> createState() => _EditorPageState();
+}
+
+/// 编辑页里的子任务草稿：保留输入框控制器与勾选状态
+class _SubtaskDraft {
+  _SubtaskDraft({this.id, required String title, this.done = false})
+    : controller = TextEditingController(text: title);
+
+  /// 已有子任务沿用原 id，新建的保存时再生成
+  final String? id;
+  final TextEditingController controller;
+  bool done;
+
+  String get title => controller.text.trim();
+
+  void dispose() => controller.dispose();
 }
 
 class _EditorPageState extends State<EditorPage> {
@@ -36,6 +48,8 @@ class _EditorPageState extends State<EditorPage> {
   late String _category;
   late String _priority;
   bool _titleError = false;
+
+  final List<_SubtaskDraft> _subtasks = [];
 
   static const List<String> _defaultCategories = ['学习', '生活', '工作'];
 
@@ -48,22 +62,30 @@ class _EditorPageState extends State<EditorPage> {
     _dueAt = item?.dueAt ?? _defaultDue();
     _category = item?.category ?? _defaultCategories.first;
     _priority = item?.priority ?? '重要但不紧急';
+    for (final subtask in item?.subtasks ?? <Subtask>[]) {
+      _subtasks.add(
+        _SubtaskDraft(
+          id: subtask.id,
+          title: subtask.title,
+          done: subtask.done,
+        ),
+      );
+    }
   }
 
+  /// 新建待办默认落在今天 18:00，可在下方改日期与时刻
   DateTime _defaultDue() {
     final now = DateTime.now();
-    final offset = switch (widget.defaultGroup) {
-      '明天' => 1,
-      '其他' => 2,
-      _ => 0,
-    };
-    return DateTime(now.year, now.month, now.day + offset, 18, 0);
+    return DateTime(now.year, now.month, now.day, 18, 0);
   }
 
   @override
   void dispose() {
     _titleCtrl.dispose();
     _noteCtrl.dispose();
+    for (final draft in _subtasks) {
+      draft.dispose();
+    }
     super.dispose();
   }
 
@@ -78,6 +100,19 @@ class _EditorPageState extends State<EditorPage> {
     return '其他';
   }
 
+  /// 只统计已填写内容的子任务
+  List<_SubtaskDraft> get _filledSubtasks =>
+      _subtasks.where((draft) => draft.title.isNotEmpty).toList();
+
+  int get _subtaskDoneCount =>
+      _filledSubtasks.where((draft) => draft.done).length;
+
+  int get _progressPercent {
+    final total = _filledSubtasks.length;
+    if (total == 0) return 0;
+    return (_subtaskDoneCount / total * 100).round();
+  }
+
   void _save() {
     final title = _titleCtrl.text.trim();
     if (title.isEmpty) {
@@ -85,6 +120,15 @@ class _EditorPageState extends State<EditorPage> {
       return;
     }
     final note = _noteCtrl.text.trim();
+    final stamp = DateTime.now().microsecondsSinceEpoch;
+    final subtasks = [
+      for (var i = 0; i < _filledSubtasks.length; i++)
+        Subtask(
+          id: _filledSubtasks[i].id ?? 's$stamp-$i',
+          title: _filledSubtasks[i].title,
+          done: _filledSubtasks[i].done,
+        ),
+    ];
 
     if (widget.initial == null) {
       widget.onSave(
@@ -95,7 +139,8 @@ class _EditorPageState extends State<EditorPage> {
           category: _category,
           priority: _priority,
           note: note,
-        ),
+          subtasks: subtasks,
+        )..syncDoneWithSubtasks(),
       );
     } else {
       final item = widget.initial!;
@@ -105,6 +150,10 @@ class _EditorPageState extends State<EditorPage> {
         ..category = _category
         ..priority = _priority
         ..note = note;
+      item.subtasks
+        ..clear()
+        ..addAll(subtasks);
+      item.syncDoneWithSubtasks();
       widget.onSave(item);
     }
     Navigator.of(context).pop(false);
@@ -176,6 +225,7 @@ class _EditorPageState extends State<EditorPage> {
               ],
             ),
           ),
+          _block('子任务', cs, _buildSubtaskEditor(cs)),
           _block(
             '备注',
             cs,
@@ -202,6 +252,112 @@ class _EditorPageState extends State<EditorPage> {
         ],
       ),
     );
+  }
+
+  Widget _buildSubtaskEditor(ColorScheme cs) {
+    final total = _filledSubtasks.length;
+    final done = _subtaskDoneCount;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (var i = 0; i < _subtasks.length; i++)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _subtasks[i].controller,
+                    decoration: _subtaskDecoration(
+                      '子任务 ${i + 1}',
+                      cs,
+                    ).copyWith(
+                      prefixIcon: Icon(
+                        _subtasks[i].done
+                            ? Icons.check_circle
+                            : Icons.radio_button_unchecked,
+                        size: 18,
+                        color: _subtasks[i].done
+                            ? cs.primary
+                            : cs.onSurfaceVariant,
+                      ),
+                      prefixIconConstraints: const BoxConstraints(
+                        minWidth: 36,
+                        minHeight: 36,
+                      ),
+                    ),
+                    onChanged: (_) => setState(() {}),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => _removeSubtask(i),
+                  icon: const Icon(Icons.close, size: 18),
+                  tooltip: '删除子任务',
+                  color: cs.onSurfaceVariant,
+                  visualDensity: VisualDensity.compact,
+                ),
+              ],
+            ),
+          ),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            onPressed: _addSubtask,
+            icon: const Icon(Icons.add, size: 18),
+            label: const Text('添加子任务'),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              minimumSize: const Size(0, 36),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Text(
+              total == 0 ? '完成度 ——' : '完成度 $done / $total',
+              style: TextStyle(
+                fontSize: 12,
+                height: 1.33,
+                color: cs.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: LinearProgressIndicator(
+                value: total == 0 ? 0 : done / total,
+                minHeight: 4,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              '$_progressPercent%',
+              style: TextStyle(
+                fontSize: 12,
+                height: 1.33,
+                fontWeight: FontWeight.w500,
+                color: cs.onSurface,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  void _addSubtask() {
+    setState(() {
+      _subtasks.add(_SubtaskDraft(title: ''));
+    });
+  }
+
+  void _removeSubtask(int index) {
+    setState(() {
+      _subtasks.removeAt(index).dispose();
+    });
   }
 
   Widget _buildDuePicker(ColorScheme cs) {
@@ -338,31 +494,15 @@ class _EditorPageState extends State<EditorPage> {
   }
 
   Future<void> _addCustomCategory() async {
-    final controller = TextEditingController();
     final result = await showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('自定义分类'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          maxLength: 8,
-          decoration: const InputDecoration(hintText: '例如：健身、阅读'),
-          onSubmitted: (value) => Navigator.of(context).pop(value),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(controller.text),
-            child: const Text('添加'),
-          ),
-        ],
+      builder: (_) => const TextInputDialog(
+        title: '自定义分类',
+        hint: '例如：健身、阅读',
+        maxLength: 8,
+        confirmLabel: '添加',
       ),
     );
-    controller.dispose();
     if (result == null) return;
     final name = result.trim();
     if (name.isEmpty) return;
@@ -396,6 +536,26 @@ class _EditorPageState extends State<EditorPage> {
       label: Text(label),
       selected: selected,
       onSelected: (_) => onTap(),
+    );
+  }
+
+  InputDecoration _subtaskDecoration(String hint, ColorScheme cs) {
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8),
+      borderSide: BorderSide.none,
+    );
+    return InputDecoration(
+      hintText: hint,
+      filled: true,
+      fillColor: cs.surfaceContainerHigh,
+      border: border,
+      enabledBorder: border,
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: BorderSide(color: cs.primary, width: 1),
+      ),
+      isDense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
     );
   }
 

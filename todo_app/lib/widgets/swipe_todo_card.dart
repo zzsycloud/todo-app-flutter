@@ -25,6 +25,7 @@ class SwipeTodoCard extends StatefulWidget {
 class _SwipeTodoCardState extends State<SwipeTodoCard> {
   static const double _actionWidth = 68;
   static const double _actionSpan = _actionWidth * 3;
+  static const double _radius = 12;
 
   double _offset = 0;
   bool _dragging = false;
@@ -36,16 +37,20 @@ class _SwipeTodoCardState extends State<SwipeTodoCard> {
     final cs = Theme.of(context).colorScheme;
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
+      // 外层圆角同时裁切下层三个操作按钮，删除按钮的右侧因此与卡片完全重合
+      borderRadius: BorderRadius.circular(_radius),
       child: Stack(
         children: [
           Positioned.fill(
             child: Padding(
+              // 与卡片 margin 完全对齐：左右 16、上下 4
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-              child: Align(
-                alignment: Alignment.centerRight,
+              // 操作层自己按卡片圆角裁切，删除按钮的右侧因此与外层圆角重合
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(_radius),
                 child: Row(
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _action(
                       '编辑',
@@ -122,7 +127,6 @@ class _SwipeTodoCardState extends State<SwipeTodoCard> {
   ) {
     return SizedBox(
       width: _actionWidth,
-      height: 64,
       child: Material(
         color: background,
         child: InkWell(

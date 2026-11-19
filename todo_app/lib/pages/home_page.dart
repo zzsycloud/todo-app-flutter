@@ -82,8 +82,48 @@ class _HomePageState extends State<HomePage> {
       padding: const EdgeInsets.only(top: 4, bottom: 96),
       children: [
         _buildOverview(),
-        for (final day in days) _buildDaySection(day),
+        if (_state.todos.isEmpty) _buildBlankState() else ...[
+          for (final day in days) _buildDaySection(day),
+        ],
       ],
+    );
+  }
+
+  /// 首次打开应用时没有任何数据，这里给出明确的引导
+  Widget _buildBlankState() {
+    final cs = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 32, 16, 16),
+      child: Column(
+        children: [
+          Icon(
+            Icons.playlist_add_check_circle_outlined,
+            size: 56,
+            color: cs.outline,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            '还没有待办',
+            style: TextStyle(
+              fontSize: 16,
+              height: 1.5,
+              fontWeight: FontWeight.w500,
+              color: cs.onSurface,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '点击右下角的 + 新建第一条待办',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12,
+              height: 1.5,
+              color: cs.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -325,6 +365,36 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ],
                       ),
+                      if (item.hasSubtasks) ...[
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            SizedBox(
+                              width: 56,
+                              child: TweenAnimationBuilder<double>(
+                                tween: Tween<double>(
+                                  begin: 0,
+                                  end: item.progress,
+                                ),
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeOut,
+                                builder: (context, value, _) =>
+                                    LinearProgressIndicator(
+                                      value: value,
+                                      minHeight: 3,
+                                      borderRadius: BorderRadius.circular(2),
+                                      backgroundColor: cs.surfaceContainerHighest,
+                                    ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '子任务 ${item.subtaskDoneCount}/${item.subtaskTotal}',
+                              style: subStyle.copyWith(fontSize: 11),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -421,7 +491,6 @@ class _HomePageState extends State<HomePage> {
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => EditorPage(
-          defaultGroup: _state.defaultGroup,
           customCategories: _state.customCategories,
           onAddCategory: _state.addCustomCategory,
           onSave: (item) async {
@@ -443,7 +512,6 @@ class _HomePageState extends State<HomePage> {
       MaterialPageRoute(
         builder: (_) => EditorPage(
           initial: item,
-          defaultGroup: _state.defaultGroup,
           customCategories: _state.customCategories,
           onAddCategory: _state.addCustomCategory,
           onSave: (_) => _state.updateTodo(item),

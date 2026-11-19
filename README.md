@@ -5,15 +5,17 @@
 ## 功能
 
 - **待办管理**：新增、编辑、删除、标记完成，分组支持今天 / 明天 / 任意日期（不早于今天）
+- **子任务**：新建页与详情页都能把一条待办拆成多条子任务，勾选子任务即时换算完成度（全部勾完才算完成）
+- **干净起步**：首次安装不预置任何示例待办，首页直接引导「点击右下角的 + 新建第一条待办」
 - **日历视图**：首页右上角进入日历页，按月翻页，按天查看当天新增了哪些待办
 - **四象限优先级**：重要且紧急 / 重要但不紧急 / 紧急但不重要 / 既不重要也不紧急
 - **独立排序**：每个日期列表可单独切换「按时间」或「按优先级」排序
 - **左滑快捷操作**：首页任务左滑可编辑、标记完成、删除，三点菜单同样保留
 - **自定义分类**：内置学习 / 生活 / 工作，可新增自己的分类
-- **统计**：已完成 / 进行中 / 累计项动态计算，点击可查看对应条目列表
+- **统计**：已完成 / 进行中 / 累计项动态计算，点击可查看对应条目列表；「我的」页按本周一到周日实时统计完成量
 - **本地持久化**：全部待办与设置通过 `shared_preferences` 保存在本机
 - **个性化**：从相册更换头像、修改姓名
-- **偏好设置**：默认分组（今天 / 明天 / 其他）、深色模式、通知提醒
+- **偏好设置**：深色模式、通知提醒
 - **通知**：开启后新增待办会收到系统悬浮通知（Android 13+ 需授予通知权限）
 
 ## 界面预览
@@ -26,7 +28,7 @@
 | **统计明细** | **深色模式** | |
 | ![统计明细](docs/screenshots/stats.png) | ![深色模式](docs/screenshots/profile-dark.png) | |
 
-> 截图取自 Android 模拟器（Pixel 6）运行 1.0.0 安装包的实拍画面。
+> 截图取自 Android 模拟器（Pixel 6）运行 1.2.0 安装包的实拍画面。
 
 ## 目录结构
 
@@ -39,7 +41,7 @@
 │   │   ├── notification_service.dart
 │   │   ├── models/todo_item.dart
 │   │   ├── pages/               home / detail / editor / calendar / stats_list / profile
-│   │   └── widgets/             animated_counter / category_art / menu_row
+│   │   └── widgets/             animated_counter / category_art / menu_row / swipe_todo_card / text_input_dialog
 │   ├── android/
 │   ├── test/
 │   └── pubspec.yaml
@@ -76,9 +78,18 @@ flutter build apk --release
 
 ## 版本
 
-版本 1.1.0
+版本 1.2.0
 
 ## 版本更新
+
+### v1.2.0
+
+1. 新建待办界面与待办详情界面新增「添加子任务」，勾选子任务后完成度自动换算
+2. 修复打开待办详情时完成度被固定成 60% 的问题
+3. 首次安装不再预置示例待办，首页改为引导新建的空状态
+4. 「我的」界面移除「默认分组」入口及其功能，本周完成情况改为按真实数据统计
+5. 修复首页左滑露出的删除按钮右侧为直角、未被外层圆角覆盖的问题
+6. 新增输入弹窗组件，修复关闭弹窗时控制器被提前释放导致的异常
 
 ### v1.1.0
 
@@ -98,6 +109,6 @@ flutter build apk --release
 
 ## 手机下载
 
-![扫码下载 1.1.0 安装包](docs/download-qr-v1.1.0.png)
+![扫码下载 1.2.0 安装包](docs/download-qr-v1.2.0.png)
 
-用手机扫描二维码即可直接下载安装包；也可以前往 [Releases](https://github.com/zzsycloud/todo-app-flutter/releases) 手动下载 `todo-app-release.apk`，或直接点击 [v1.1.0 安装包](https://github.com/zzsycloud/todo-app-flutter/releases/download/v1.1.0/todo-app-release.apk)。Android 13 及以上首次开启通知提醒时需授予通知权限。
+用手机扫描二维码即可直接下载安装包；也可以前往 [Releases](https://github.com/zzsycloud/todo-app-flutter/releases) 手动下载 `todo-app-release.apk`，或直接点击 [v1.2.0 安装包](https://github.com/zzsycloud/todo-app-flutter/releases/download/v1.2.0/todo-app-release.apk)。Android 13 及以上首次开启通知提醒时需授予通知权限。

@@ -7,6 +7,7 @@ import '../app_state.dart';
 import '../notification_service.dart';
 import '../pages/stats_list_page.dart';
 import '../widgets/animated_counter.dart';
+import '../widgets/text_input_dialog.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key, required this.state});
@@ -20,11 +21,22 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   bool _expanded = false;
 
-  static const List<double> _barHeights = [24, 40, 16, 48, 32];
-  static const List<String> _dayLabels = ['一', '二', '三', '四', '五'];
+  static const List<String> _dayLabels = ['一', '二', '三', '四', '五', '六', '日'];
   static const double _expandHeight = 168;
+  static const double _maxBarHeight = 72;
 
   AppState get _state => widget.state;
+
+  /// 本周每天完成数量的柱高：全为 0 时保留一条基线
+  List<double> _barHeights() {
+    final counts = _state.weekDoneCounts;
+    final maxCount = counts.fold<int>(0, (a, b) => b > a ? b : a);
+    if (maxCount == 0) return List<double>.filled(7, 2);
+    return [
+      for (final count in counts)
+        count == 0 ? 2 : 14 + (_maxBarHeight - 14) * count / maxCount,
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +65,7 @@ class _ProfilePageState extends State<ProfilePage> {
           _buildSettings(cs),
           const SizedBox(height: 24),
           Text(
-            '版本 1.1.0',
+            '版本 1.2.0',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 12,
@@ -213,6 +225,15 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildExpandCard(ColorScheme cs) {
+    final counts = _state.weekDoneCounts;
+    final weekTotal = counts.fold<int>(0, (a, b) => a + b);
+    final todayIndex = DateTime.now().weekday - 1;
+    final heights = _barHeights();
+    final elapsedDays = todayIndex + 1;
+    final dailyAvg = elapsedDays == 0
+        ? '0'
+        : (weekTotal / elapsedDays).toStringAsFixed(1);
+
     return Card(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       elevation: 1,
@@ -242,7 +263,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          '周一至周五 · 共 20 项',
+                          '周一至周日 · 本周共 $weekTotal 项',
                           style: TextStyle(
                             fontSize: 12,
                             height: 1.33,
@@ -279,7 +300,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          for (var i = 0; i < _barHeights.length; i++)
+                          for (var i = 0; i < heights.length; i++)
                             Expanded(
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.end,
@@ -288,9 +309,11 @@ class _ProfilePageState extends State<ProfilePage> {
                                     duration: const Duration(milliseconds: 300),
                                     curve: Curves.easeInOut,
                                     width: 24,
-                                    height: _expanded ? _barHeights[i] : 0,
+                                    height: _expanded ? heights[i] : 0,
                                     decoration: BoxDecoration(
-                                      color: cs.primary,
+                                      color: i == todayIndex
+                                          ? cs.primary
+                                          : cs.primary.withValues(alpha: 0.45),
                                       borderRadius:
                                           const BorderRadius.vertical(
                                         top: Radius.circular(4),
@@ -303,7 +326,12 @@ class _ProfilePageState extends State<ProfilePage> {
                                     style: TextStyle(
                                       fontSize: 12,
                                       height: 1.33,
-                                      color: cs.onSurfaceVariant,
+                                      fontWeight: i == todayIndex
+                                          ? FontWeight.w600
+                                          : FontWeight.w400,
+                                      color: i == todayIndex
+                                          ? cs.onSurface
+                                          : cs.onSurfaceVariant,
                                     ),
                                   ),
                                 ],
@@ -315,7 +343,9 @@ class _ProfilePageState extends State<ProfilePage> {
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        '本周累计完成 20 项，日均 4 项。',
+                        weekTotal == 0
+                            ? '本周还没有完成的待办，勾选一条试试看。'
+                            : '本周累计完成 $weekTotal 项，日均 $dailyAvg 项。',
                         style: TextStyle(
                           fontSize: 12,
                           height: 1.33,
@@ -349,26 +379,6 @@ class _ProfilePageState extends State<ProfilePage> {
             onChanged: _toggleNotifications,
           ),
           Divider(height: 1, indent: 56, color: cs.outlineVariant),
-          ListTile(
-            leading: Icon(Icons.folder_outlined, color: cs.onSurfaceVariant),
-            title: const Text('默认分组'),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  _state.defaultGroup,
-                  style: TextStyle(
-                    fontSize: 12,
-                    height: 1.33,
-                    color: cs.onSurfaceVariant,
-                  ),
-                ),
-                Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
-              ],
-            ),
-            onTap: _pickDefaultGroup,
-          ),
-          Divider(height: 1, indent: 56, color: cs.outlineVariant),
           SwitchListTile(
             secondary: Icon(Icons.dark_mode_outlined, color: cs.onSurfaceVariant),
             title: const Text('深色模式'),
@@ -397,56 +407,18 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _editName() async {
-    final controller = TextEditingController(text: _state.userName);
     final result = await showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('修改姓名'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          maxLength: 20,
-          decoration: const InputDecoration(hintText: '请输入姓名'),
-          onSubmitted: (value) => Navigator.of(context).pop(value),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(controller.text),
-            child: const Text('保存'),
-          ),
-        ],
+      builder: (_) => TextInputDialog(
+        title: '修改姓名',
+        hint: '请输入姓名',
+        initialValue: _state.userName,
+        maxLength: 20,
+        confirmLabel: '保存',
       ),
     );
-    controller.dispose();
     if (result == null) return;
     await _state.setUserName(result);
-  }
-
-  Future<void> _pickDefaultGroup() async {
-    final result = await showDialog<String>(
-      context: context,
-      builder: (context) => SimpleDialog(
-        title: const Text('默认分组'),
-        children: [
-          for (final group in ['今天', '明天', '其他'])
-            ListTile(
-              leading: Icon(
-                group == _state.defaultGroup
-                    ? Icons.radio_button_checked
-                    : Icons.radio_button_unchecked,
-              ),
-              title: Text(group),
-              onTap: () => Navigator.of(context).pop(group),
-            ),
-        ],
-      ),
-    );
-    if (result == null) return;
-    await _state.setDefaultGroup(result);
   }
 
   Future<void> _toggleNotifications(bool value) async {

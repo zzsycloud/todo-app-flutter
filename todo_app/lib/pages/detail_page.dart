@@ -5,6 +5,7 @@ import '../models/todo_item.dart';
 import '../pages/editor_page.dart';
 import '../widgets/category_art.dart';
 import '../widgets/menu_row.dart';
+import '../widgets/text_input_dialog.dart';
 
 class DetailPage extends StatefulWidget {
   const DetailPage({super.key, required this.state, required this.item});
@@ -20,7 +21,7 @@ class _DetailPageState extends State<DetailPage>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 1200),
+    duration: const Duration(milliseconds: 900),
   );
 
   // 9.1 动画四角色：Controller 当时钟，Tween 映射值域，Curve 控制节奏
@@ -30,9 +31,10 @@ class _DetailPageState extends State<DetailPage>
   @override
   void initState() {
     super.initState();
+    // 完成度完全由真实数据推导：没有子任务时只有 0% 或 100%
     _animation = Tween<double>(
       begin: 0,
-      end: _done ? 100 : 60,
+      end: widget.item.progressPercent.toDouble(),
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
     _controller.forward();
   }
@@ -52,12 +54,46 @@ class _DetailPageState extends State<DetailPage>
       ..forward();
   }
 
-  void _toggleDone() {
+  /// 数据变化后统一刷新本地状态与进度动画
+  void _refresh() {
     setState(() {
-      _done = !_done;
-      _animateTo(_done ? 100 : 60);
+      _done = widget.item.done;
+      _animateTo(widget.item.progressPercent.toDouble());
     });
+  }
+
+  void _toggleDone() {
     widget.state.toggleDone(widget.item);
+    _refresh();
+  }
+
+  void _toggleSubtask(int index) {
+    widget.state.toggleSubtask(widget.item, index);
+    _refresh();
+  }
+
+  Future<void> _addSubtask() async {
+    final result = await showDialog<String>(
+      context: context,
+      builder: (_) => const TextInputDialog(
+        title: '添加子任务',
+        hint: '例如：整理素材',
+        maxLength: 40,
+        confirmLabel: '添加',
+      ),
+    );
+    if (!mounted || result == null) return;
+    final title = result.trim();
+    if (title.isEmpty) return;
+    await widget.state.addSubtask(widget.item, title);
+    if (!mounted) return;
+    _refresh();
+  }
+
+  Future<void> _deleteSubtask(int index) async {
+    await widget.state.deleteSubtask(widget.item, index);
+    if (!mounted) return;
+    _refresh();
   }
 
   void _deleteItem() {
@@ -70,7 +106,6 @@ class _DetailPageState extends State<DetailPage>
       MaterialPageRoute(
         builder: (_) => EditorPage(
           initial: widget.item,
-          defaultGroup: widget.state.defaultGroup,
           customCategories: widget.state.customCategories,
           onAddCategory: widget.state.addCustomCategory,
           onSave: (_) => widget.state.updateTodo(widget.item),
@@ -83,7 +118,7 @@ class _DetailPageState extends State<DetailPage>
       Navigator.of(context).pop();
       return;
     }
-    setState(() {});
+    _refresh();
   }
 
   @override
@@ -195,6 +230,7 @@ class _DetailPageState extends State<DetailPage>
                   ),
                 ),
                 _buildProgressCard(cs),
+                _buildSubtaskCard(cs),
                 _buildMetaList(cs),
                 _buildNotesCard(cs, note),
               ],
@@ -207,6 +243,7 @@ class _DetailPageState extends State<DetailPage>
   }
 
   Widget _buildProgressCard(ColorScheme cs) {
+    final item = widget.item;
     return Card(
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       elevation: 1,
@@ -243,7 +280,7 @@ class _DetailPageState extends State<DetailPage>
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8),
                       child: Text(
-                        '3 / 5 子任务',
+                        item.progressLabel,
                         style: TextStyle(
                           fontSize: 12,
                           height: 1.33,
@@ -262,6 +299,129 @@ class _DetailPageState extends State<DetailPage>
               ],
             );
           },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSubtaskCard(ColorScheme cs) {
+    final item = widget.item;
+    final subtasks = item.subtasks;
+
+    return Card(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      elevation: 1,
+      color: cs.surfaceContainerLow,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  '子任务',
+                  style: TextStyle(
+                    fontSize: 14,
+                    height: 1.43,
+                    fontWeight: FontWeight.w500,
+                    color: cs.onSurface,
+                  ),
+                ),
+                if (subtasks.isNotEmpty) ...[
+                  const SizedBox(width: 8),
+                  Text(
+                    '${item.subtaskDoneCount} / ${item.subtaskTotal}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      height: 1.33,
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+                const Spacer(),
+                TextButton.icon(
+                  onPressed: _addSubtask,
+                  icon: const Icon(Icons.add, size: 18),
+                  label: const Text('添加'),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    minimumSize: const Size(0, 36),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
+              ],
+            ),
+            if (subtasks.isEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(0, 4, 8, 4),
+                child: Text(
+                  '把这件事拆成几个小步骤，勾选后完成度会自动更新。',
+                  style: TextStyle(
+                    fontSize: 12,
+                    height: 1.5,
+                    color: cs.onSurfaceVariant,
+                  ),
+                ),
+              )
+            else
+              for (var i = 0; i < subtasks.length; i++)
+                _buildSubtaskRow(cs, subtasks[i], i),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSubtaskRow(ColorScheme cs, Subtask subtask, int index) {
+    return InkWell(
+      onTap: () => _toggleSubtask(index),
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOut,
+              width: 22,
+              height: 22,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: subtask.done ? cs.primary : Colors.transparent,
+                border: subtask.done
+                    ? null
+                    : Border.all(color: cs.outline, width: 1.5),
+              ),
+              child: subtask.done
+                  ? Icon(Icons.check, size: 14, color: cs.onPrimary)
+                  : null,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                subtask.title,
+                style: TextStyle(
+                  fontSize: 14,
+                  height: 1.43,
+                  color: subtask.done ? cs.onSurfaceVariant : cs.onSurface,
+                  decoration: subtask.done
+                      ? TextDecoration.lineThrough
+                      : TextDecoration.none,
+                ),
+              ),
+            ),
+            IconButton(
+              onPressed: () => _deleteSubtask(index),
+              icon: const Icon(Icons.close, size: 16),
+              tooltip: '删除子任务',
+              color: cs.onSurfaceVariant,
+              visualDensity: VisualDensity.compact,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            ),
+          ],
         ),
       ),
     );
