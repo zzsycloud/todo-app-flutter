@@ -12,6 +12,16 @@
 - **偏好设置**：默认分组、深色模式、通知提醒
 - **通知**：开启后新增待办会收到系统悬浮通知（Android 13+ 需授予通知权限）
 
+## 界面预览
+
+| 首页 | 日历 | 待办详情 |
+| --- | --- | --- |
+| ![首页](docs/screenshots/home.png) | ![日历](docs/screenshots/calendar.png) | ![待办详情](docs/screenshots/detail.png) |
+| **我的** | **统计明细** | **深色模式** |
+| ![我的](docs/screenshots/profile.png) | ![统计明细](docs/screenshots/stats.png) | ![深色模式](docs/screenshots/profile-dark.png) |
+
+> 截图取自 Android 真机运行的 1.0.0 安装包。
+
 ## 动画实践
 
 | 知识点 | 实现位置 | 说明 |
@@ -71,6 +81,8 @@ flutter build apk --release
 
 版本 1.0.0
 
-## 下载
+## 手机下载
 
-安装包见 [Releases](../../releases) 中的 `todo-app-release.apk`。
+![扫码下载 APK](docs/download-qr.png)
+
+用手机扫描二维码即可直接下载安装包；也可以前往 [Releases](https://github.com/zzsycloud/todo-app-flutter/releases) 手动下载 `todo-app-release.apk`，或直接点击 [v1.0.0 安装包](https://github.com/zzsycloud/todo-app-flutter/releases/download/v1.0.0/todo-app-release.apk)。Android 13 及以上首次开启通知提醒时需授予通知权限。
