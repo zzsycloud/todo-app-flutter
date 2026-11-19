@@ -30,7 +30,7 @@ class TodoApp extends StatelessWidget {
     return ListenableBuilder(
       listenable: state,
       builder: (context, _) => MaterialApp(
-        title: '今日待办',
+        title: 'ToDo',
         debugShowCheckedModeBanner: false,
         theme: _theme(Brightness.light),
         darkTheme: _theme(Brightness.dark),

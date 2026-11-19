@@ -53,7 +53,7 @@ class _ProfilePageState extends State<ProfilePage> {
           _buildSettings(cs),
           const SizedBox(height: 24),
           Text(
-            '版本 1.0.0',
+            '版本 1.1.0',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 12,
@@ -432,7 +432,7 @@ class _ProfilePageState extends State<ProfilePage> {
       builder: (context) => SimpleDialog(
         title: const Text('默认分组'),
         children: [
-          for (final group in ['今天', '明天'])
+          for (final group in ['今天', '明天', '其他'])
             ListTile(
               leading: Icon(
                 group == _state.defaultGroup

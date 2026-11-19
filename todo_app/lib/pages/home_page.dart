@@ -9,6 +9,7 @@ import '../pages/editor_page.dart';
 import '../pages/profile_page.dart';
 import '../widgets/category_art.dart';
 import '../widgets/menu_row.dart';
+import '../widgets/swipe_todo_card.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.state});
@@ -75,19 +76,27 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildTodoList() {
-    final today = _state.todayTodos;
-    final tomorrow = _state.tomorrowTodos;
+    final days = _state.todoDays;
 
     return ListView(
       padding: const EdgeInsets.only(top: 4, bottom: 96),
       children: [
         _buildOverview(),
-        _buildSectionHeader('今天', today.length),
-        if (today.isEmpty) _buildEmpty(),
-        ...today.map(_buildTodoCard),
-        _buildSectionHeader('明天', tomorrow.length),
-        if (tomorrow.isEmpty) _buildEmpty(),
-        ...tomorrow.map(_buildTodoCard),
+        for (final day in days) _buildDaySection(day),
+      ],
+    );
+  }
+
+  Widget _buildDaySection(DateTime day) {
+    final items = _state.todosOn(day);
+    final mode = _state.sortModeFor(day);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildSectionHeader(day, items.length, mode),
+        if (items.isEmpty) _buildEmpty(),
+        ...items.map(_buildTodoCard),
       ],
     );
   }
@@ -181,27 +190,67 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildSectionHeader(String title, int count) {
+  /// 日期分组标题：日期 + 条数 + 该日独立的排序切换
+  Widget _buildSectionHeader(DateTime day, int count, TodoSortMode mode) {
     final cs = Theme.of(context).colorScheme;
     final style = TextStyle(
       fontSize: 14,
       height: 1.43,
       color: cs.onSurfaceVariant,
     );
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+      padding: const EdgeInsets.fromLTRB(16, 12, 8, 0),
       child: Row(
         children: [
           Expanded(
             child: Text(
-              title,
+              _dayLabel(day),
               style: style.copyWith(fontWeight: FontWeight.w500),
             ),
           ),
           Text('$count', style: style),
+          const SizedBox(width: 8),
+          TextButton.icon(
+            onPressed: () => _state.setSortMode(
+              day,
+              mode == TodoSortMode.time
+                  ? TodoSortMode.priority
+                  : TodoSortMode.time,
+            ),
+            icon: const Icon(Icons.swap_vert, size: 16),
+            label: Text(
+              mode == TodoSortMode.time ? '按时间' : '按优先级',
+              style: TextStyle(fontSize: 12, height: 1.33, color: cs.primary),
+            ),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              minimumSize: const Size(0, 32),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  String _dayLabel(DateTime day) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final diff = day.difference(today).inDays;
+    if (diff == 0) return '今天';
+    if (diff == 1) return '明天';
+    const week = ['一', '二', '三', '四', '五', '六', '日'];
+    return '${day.month} 月 ${day.day} 日 · 周${week[day.weekday - 1]}';
+  }
+
+  Color _priorityColor(ColorScheme cs, String priority) {
+    return switch (priority) {
+      '重要且紧急' => cs.error,
+      '重要但不紧急' => cs.primary,
+      '紧急但不重要' => cs.tertiary,
+      _ => cs.onSurfaceVariant,
+    };
   }
 
   Widget _buildTodoCard(TodoItem item) {
@@ -212,107 +261,118 @@ class _HomePageState extends State<HomePage> {
       color: cs.onSurfaceVariant,
     );
 
-    return Card(
-      margin: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-      elevation: 1,
-      color: item.done ? cs.surfaceContainer : cs.surfaceContainerLow,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => _openDetail(item),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
-          child: Row(
-            children: [
-              Checkbox(
-                value: item.done,
-                onChanged: (_) => _state.toggleDone(item),
-              ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 9.7 隐式动画：完成态文字变灰 + 删除线
-                    AnimatedDefaultTextStyle(
-                      duration: const Duration(milliseconds: 300),
-                      style: TextStyle(
-                        fontSize: 16,
-                        height: 1.5,
-                        color: item.done ? cs.onSurfaceVariant : cs.onSurface,
-                        decoration: item.done
-                            ? TextDecoration.lineThrough
-                            : TextDecoration.none,
+    return SwipeTodoCard(
+      done: item.done,
+      onEdit: () => _editTodo(item),
+      onToggle: () => _state.toggleDone(item),
+      onDelete: () => _state.deleteTodo(item),
+      child: Card(
+        margin: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+        elevation: 1,
+        color: item.done ? cs.surfaceContainer : cs.surfaceContainerLow,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => _openDetail(item),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
+            child: Row(
+              children: [
+                Checkbox(
+                  value: item.done,
+                  onChanged: (_) => _state.toggleDone(item),
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 9.7 隐式动画：完成态文字变灰 + 删除线
+                      AnimatedDefaultTextStyle(
+                        duration: const Duration(milliseconds: 300),
+                        style: TextStyle(
+                          fontSize: 16,
+                          height: 1.5,
+                          color:
+                              item.done ? cs.onSurfaceVariant : cs.onSurface,
+                          decoration: item.done
+                              ? TextDecoration.lineThrough
+                              : TextDecoration.none,
+                        ),
+                        child: Text(
+                          item.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                      child: Text(
-                        item.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Text(item.time, style: subStyle),
+                          _dot(cs),
+                          Text(item.category, style: subStyle),
+                          _dot(cs),
+                          Flexible(
+                            child: Text(
+                              item.priority,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: subStyle.copyWith(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: _priorityColor(cs, item.priority),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 4),
+                // 9.4 Hero 起飞点
+                SizedBox(
+                  width: 48,
+                  height: 48,
+                  child: Hero(
+                    tag: 'todo-art-${item.id}',
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: AnimatedOpacity(
+                        duration: const Duration(milliseconds: 300),
+                        opacity: item.done ? 0.55 : 1,
+                        child: CategoryArt(category: item.category),
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        Text(item.time, style: subStyle),
-                        _dot(cs),
-                        Text(item.category, style: subStyle),
-                        _dot(cs),
-                        Text(
-                          item.priority,
-                          style: subStyle.copyWith(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: item.priority == '高' ? cs.error : null,
-                          ),
-                        ),
-                      ],
+                  ),
+                ),
+                PopupMenuButton<String>(
+                  tooltip: '更多',
+                  icon: const Icon(Icons.more_vert),
+                  onSelected: (value) => _onMenuSelected(value, item),
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'edit',
+                      child: MenuRow(icon: Icons.edit_outlined, label: '编辑'),
+                    ),
+                    PopupMenuItem(
+                      value: 'toggle',
+                      child: MenuRow(
+                        icon: item.done ? Icons.undo : Icons.check,
+                        label: item.done ? '标记未完成' : '标记完成',
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: MenuRow(
+                        icon: Icons.delete_outline,
+                        label: '删除',
+                        danger: true,
+                      ),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(width: 4),
-              // 9.4 Hero 起飞点
-              SizedBox(
-                width: 48,
-                height: 48,
-                child: Hero(
-                  tag: 'todo-art-${item.id}',
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: AnimatedOpacity(
-                      duration: const Duration(milliseconds: 300),
-                      opacity: item.done ? 0.55 : 1,
-                      child: CategoryArt(category: item.category),
-                    ),
-                  ),
-                ),
-              ),
-              PopupMenuButton<String>(
-                tooltip: '更多',
-                icon: const Icon(Icons.more_vert),
-                onSelected: (value) => _onMenuSelected(value, item),
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: 'edit',
-                    child: MenuRow(icon: Icons.edit_outlined, label: '编辑'),
-                  ),
-                  PopupMenuItem(
-                    value: 'toggle',
-                    child: MenuRow(
-                      icon: item.done ? Icons.undo : Icons.check,
-                      label: item.done ? '标记未完成' : '标记完成',
-                    ),
-                  ),
-                  const PopupMenuItem(
-                    value: 'delete',
-                    child: MenuRow(
-                      icon: Icons.delete_outline,
-                      label: '删除',
-                      danger: true,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -362,6 +422,8 @@ class _HomePageState extends State<HomePage> {
       MaterialPageRoute(
         builder: (_) => EditorPage(
           defaultGroup: _state.defaultGroup,
+          customCategories: _state.customCategories,
+          onAddCategory: _state.addCustomCategory,
           onSave: (item) async {
             await _state.addTodo(item);
             if (_state.notificationsEnabled) {
@@ -382,6 +444,8 @@ class _HomePageState extends State<HomePage> {
         builder: (_) => EditorPage(
           initial: item,
           defaultGroup: _state.defaultGroup,
+          customCategories: _state.customCategories,
+          onAddCategory: _state.addCustomCategory,
           onSave: (_) => _state.updateTodo(item),
           onDelete: () => _state.deleteTodo(item),
         ),

@@ -71,6 +71,8 @@ class _DetailPageState extends State<DetailPage>
         builder: (_) => EditorPage(
           initial: widget.item,
           defaultGroup: widget.state.defaultGroup,
+          customCategories: widget.state.customCategories,
+          onAddCategory: widget.state.addCustomCategory,
           onSave: (_) => widget.state.updateTodo(widget.item),
           onDelete: () => widget.state.deleteTodo(widget.item),
         ),
@@ -170,13 +172,9 @@ class _DetailPageState extends State<DetailPage>
                     runSpacing: 8,
                     children: [
                       _pill(
-                        text: '${item.priority}优先级',
-                        background: item.priority == '高'
-                            ? cs.errorContainer
-                            : cs.surfaceContainerHighest,
-                        foreground: item.priority == '高'
-                            ? cs.onErrorContainer
-                            : cs.onSurfaceVariant,
+                        text: item.priority,
+                        background: _priorityBackground(cs, item.priority),
+                        foreground: _priorityForeground(cs, item.priority),
                       ),
                       // 9.6 AnimatedSwitcher：状态文字切换
                       AnimatedSwitcher(
@@ -376,6 +374,24 @@ class _DetailPageState extends State<DetailPage>
     final hour = date.hour.toString().padLeft(2, '0');
     final minute = date.minute.toString().padLeft(2, '0');
     return '${date.month} 月 ${date.day} 日 $hour:$minute';
+  }
+
+  Color _priorityBackground(ColorScheme cs, String priority) {
+    return switch (priority) {
+      '重要且紧急' => cs.errorContainer,
+      '重要但不紧急' => cs.primaryContainer,
+      '紧急但不重要' => cs.tertiaryContainer,
+      _ => cs.surfaceContainerHighest,
+    };
+  }
+
+  Color _priorityForeground(ColorScheme cs, String priority) {
+    return switch (priority) {
+      '重要且紧急' => cs.onErrorContainer,
+      '重要但不紧急' => cs.onPrimaryContainer,
+      '紧急但不重要' => cs.onTertiaryContainer,
+      _ => cs.onSurfaceVariant,
+    };
   }
 
   Widget _pill({

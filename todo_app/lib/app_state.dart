@@ -18,6 +18,10 @@ class AppState extends ChangeNotifier {
   bool _darkMode = false;
   bool _notificationsEnabled = false;
   String _defaultGroup = '今天';
+  final List<String> _customCategories = [];
+
+  /// 每个日期独立的排序方式，key 为 yyyy-MM-dd
+  final Map<String, TodoSortMode> _sortModes = {};
 
   List<TodoItem> get todos => List.unmodifiable(_todos);
   String get userName => _userName;
@@ -25,16 +29,54 @@ class AppState extends ChangeNotifier {
   bool get darkMode => _darkMode;
   bool get notificationsEnabled => _notificationsEnabled;
   String get defaultGroup => _defaultGroup;
+  List<String> get customCategories => List.unmodifiable(_customCategories);
 
   int get totalCount => _todos.length;
   int get doneCount => _todos.where((item) => item.done).length;
   int get pendingCount => totalCount - doneCount;
 
-  List<TodoItem> get todayTodos =>
-      _todos.where((item) => item.group == '今天').toList();
+  /// 首页按日期分组展示：今天、明天之后按日期升序排列
+  List<DateTime> get todoDays {
+    final days = <DateTime>{};
+    for (final item in _todos) {
+      days.add(_dayOnly(item.dueAt));
+    }
+    final list = days.toList()..sort();
+    return list;
+  }
 
-  List<TodoItem> get tomorrowTodos =>
-      _todos.where((item) => item.group == '明天').toList();
+  List<TodoItem> todosOn(DateTime day) {
+    final items = _todos
+        .where((item) => _dayOnly(item.dueAt) == _dayOnly(day))
+        .toList();
+    return sortTodos(items, sortModeFor(day));
+  }
+
+  /// 按排序方式排列：时间升序，或四象限优先级权重升序
+  List<TodoItem> sortTodos(List<TodoItem> items, TodoSortMode mode) {
+    final sorted = List<TodoItem>.of(items);
+    if (mode == TodoSortMode.time) {
+      sorted.sort((a, b) => a.dueAt.compareTo(b.dueAt));
+    } else {
+      sorted.sort((a, b) {
+        final rank = priorityRank(a.priority)
+            .compareTo(priorityRank(b.priority));
+        if (rank != 0) return rank;
+        return a.dueAt.compareTo(b.dueAt);
+      });
+    }
+    return sorted;
+  }
+
+  TodoSortMode sortModeFor(DateTime day) {
+    return _sortModes[_dayKey(day)] ?? TodoSortMode.priority;
+  }
+
+  Future<void> setSortMode(DateTime day, TodoSortMode mode) async {
+    _sortModes[_dayKey(day)] = mode;
+    await _save();
+    notifyListeners();
+  }
 
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
@@ -48,6 +90,19 @@ class AppState extends ChangeNotifier {
         _notificationsEnabled =
             json['notificationsEnabled'] as bool? ?? false;
         _defaultGroup = json['defaultGroup'] as String? ?? '今天';
+        _customCategories
+          ..clear()
+          ..addAll(
+            (json['customCategories'] as List<dynamic>? ?? [])
+                .map((e) => e.toString()),
+          );
+        _sortModes.clear();
+        final modes = json['sortModes'] as Map<String, dynamic>? ?? {};
+        for (final entry in modes.entries) {
+          _sortModes[entry.key] = entry.value == 'time'
+              ? TodoSortMode.time
+              : TodoSortMode.priority;
+        }
         final list = json['todos'] as List<dynamic>? ?? [];
         _todos
           ..clear()
@@ -143,6 +198,14 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> addCustomCategory(String value) async {
+    final name = value.trim();
+    if (name.isEmpty || _customCategories.contains(name)) return;
+    _customCategories.add(name);
+    await _save();
+    notifyListeners();
+  }
+
   Future<void> _save() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
@@ -153,9 +216,23 @@ class AppState extends ChangeNotifier {
         'darkMode': _darkMode,
         'notificationsEnabled': _notificationsEnabled,
         'defaultGroup': _defaultGroup,
+        'customCategories': _customCategories,
+        'sortModes': {
+          for (final entry in _sortModes.entries)
+            entry.key: entry.value == TodoSortMode.time ? 'time' : 'priority',
+        },
         'todos': _todos.map((e) => e.toJson()).toList(),
       }),
     );
+  }
+
+  DateTime _dayOnly(DateTime value) =>
+      DateTime(value.year, value.month, value.day);
+
+  String _dayKey(DateTime value) {
+    final month = value.month.toString().padLeft(2, '0');
+    final day = value.day.toString().padLeft(2, '0');
+    return '${value.year}-$month-$day';
   }
 
   List<TodoItem> _seedTodos() {
@@ -163,20 +240,24 @@ class AppState extends ChangeNotifier {
     TodoItem seed(
       String id,
       String title,
-      String time,
-      String group,
+      int dayOffset,
+      int hour,
+      int minute,
       String category,
       String priority,
-      int daysAgo,
-      int hour,
-      int minute, {
+      int daysAgo, {
       bool done = false,
     }) {
       return TodoItem(
         id: id,
         title: title,
-        time: time,
-        group: group,
+        dueAt: DateTime(
+          now.year,
+          now.month,
+          now.day + dayOffset,
+          hour,
+          minute,
+        ),
         category: category,
         priority: priority,
         done: done,
@@ -191,14 +272,24 @@ class AppState extends ChangeNotifier {
     }
 
     return [
-      seed('t1', '提交移动软件动画课程作业', '今天 18:00', '今天', '学习', '高', 0, 9, 12),
-      seed('t2', '整理 Flutter 动画笔记', '今天 20:00', '今天', '学习', '中', 0, 10, 30),
-      seed('t3', '给室友带一杯咖啡', '今天 09:30', '今天', '生活', '低', 1, 8, 40, done: true),
-      seed('t4', '预约图书馆自习座位', '今天 21:00', '今天', '生活', '中', 2, 11, 5),
-      seed('t5', '完成 Hero 转场练习 Demo', '今天 22:00', '今天', '学习', '高', 3, 14, 20),
-      seed('t6', '复习 AnimationController 生命周期', '明天 10:00', '明天', '学习', '中', 4, 16, 45),
-      seed('t7', '交电费', '明天 12:00', '明天', '生活', '低', 5, 19, 10),
-      seed('t8', '小组周会 · 进度对齐', '明天 15:00', '明天', '工作', '高', 6, 20, 0),
+      seed('t1', '提交移动软件动画课程作业', 0, 18, 0, '学习', '重要且紧急', 0),
+      seed('t2', '整理 Flutter 动画笔记', 0, 20, 0, '学习', '重要但不紧急', 0),
+      seed(
+        't3',
+        '给室友带一杯咖啡',
+        0,
+        9,
+        30,
+        '生活',
+        '既不重要也不紧急',
+        1,
+        done: true,
+      ),
+      seed('t4', '预约图书馆自习座位', 0, 21, 0, '生活', '紧急但不重要', 2),
+      seed('t5', '完成 Hero 转场练习 Demo', 0, 22, 0, '学习', '重要且紧急', 3),
+      seed('t6', '复习 AnimationController 生命周期', 1, 10, 0, '学习', '重要但不紧急', 4),
+      seed('t7', '交电费', 1, 12, 0, '生活', '既不重要也不紧急', 5),
+      seed('t8', '小组周会 · 进度对齐', 2, 15, 0, '工作', '重要且紧急', 6),
     ];
   }
 }

@@ -2,7 +2,7 @@
     <!-- Android 13+ 弹出通知需要用户在运行时授权 -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
-        android:label="今日待办"
+        android:label="ToDo"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

@@ -236,7 +236,7 @@ class _CalendarPageState extends State<CalendarPage> {
           ),
         ),
         subtitle: Text(
-          '${item.time} · ${item.category} · ${item.priority}优先级',
+          '${item.time} · ${item.category} · ${item.priority}',
           style: TextStyle(
             fontSize: 12,
             height: 1.33,
